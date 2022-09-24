@@ -96,7 +96,7 @@ bool Board::solve() {
     if (naked_single()) {
       continue;
     }
-    if (hidden_single()) {
+    if (process_all_groups(&Board::hidden_single_helper)) {
       continue;
     }
 
@@ -181,16 +181,16 @@ bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
 }
 
 //check each row/column/house to look for singles
-bool Board::hidden_single() {
+bool Board::process_all_groups(bool (Board::*helper)(std::shared_ptr<Group>)) {
   bool activity = false; 
   for (auto row : _rows) { 
-    activity |= hidden_single_helper(row);
+    activity |= (this->*helper)(row);
   }
   for (auto column : _columns) {
-    activity |= hidden_single_helper(column);
+    activity |= (this->*helper)(column);
   }
   for (auto house : _houses) {
-    activity |= hidden_single_helper(house);
+    activity |= (this->*helper)(house);
   }
   return activity;
 }

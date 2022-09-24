@@ -35,7 +35,7 @@ private: //solve functions
   bool process_square(std::shared_ptr<Square> sq);
   // all others go here like find singles, doubles etc etc
   bool naked_single();
-  bool hidden_single();
+  bool process_all_groups(bool (Board::*func)(std::shared_ptr<Group>));
   bool hidden_single_helper(std::shared_ptr<Group> group);
 
 private: //utilities
