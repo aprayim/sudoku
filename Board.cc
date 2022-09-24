@@ -83,7 +83,7 @@ Board::Board(std::ifstream& is) {
 
   for (auto idx : squares_to_process) {
     //std::cout << "processing square: " << idx << std::endl;
-    process_square(_squares[idx]);
+    adjust_from_square(_squares[idx]);
   }
 }
 
@@ -111,7 +111,7 @@ bool Board::solve() {
   return true;
 }
 
-bool Board::process_square(std::shared_ptr<Square> square_to_process) {
+bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
 
   bool activity = false;
 
@@ -144,7 +144,7 @@ bool Board::naked_single_helper(std::shared_ptr<Square> square) {
   if (!square->set_value(value))
     return false;
   std::cout << "naked single: " << *square << std::endl;
-  return process_square(square);
+  return adjust_from_square(square);
 }
 
 bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
@@ -170,7 +170,7 @@ bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
     auto square = result[j];
     square->set_value(value);
     std::cout << "hidden single: " << *square << std::endl;
-    activity |= process_square(square);
+    activity |= adjust_from_square(square);
   }
   return activity;
 }
