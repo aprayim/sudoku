@@ -99,6 +99,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::hidden_single_helper)) {
       continue;
     }
+    if (process_all_groups(&Board::naked_pair_helper)) {
+      continue;
+    }
 
     activity = false;
   }
@@ -171,6 +174,30 @@ bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
     square->set_value(value);
     std::cout << "hidden single: " << *square << std::endl;
     activity |= adjust_from_square(square);
+  }
+  return activity;
+}
+
+bool Board::naked_pair_helper(std::shared_ptr<Group> group) {
+
+  bool activity = false;
+  auto squares = group->squares();
+  for (auto j=0; j<squares.size(); j++) {
+    if (squares[j]->number_allowed()!=2)
+      continue;
+    for (auto k=j+1; k<squares.size(); k++) {
+      if (!squares[j]->same_allowed(*(squares[k])))
+        continue;
+
+      std::cout << "Naked pair: " << *(squares[j]) << " " << *(squares[k]) << std::endl;
+      
+      for (auto p=0; p<9; p++) {
+        if (p==j || p==k)
+          continue;
+        activity |= squares[p]->disallow(squares[j]->allowed_at(0));
+        activity |= squares[p]->disallow(squares[j]->allowed_at(1));
+      }
+    }
   }
   return activity;
 }

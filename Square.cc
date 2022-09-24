@@ -15,6 +15,16 @@ bool Square::set_value(const uint8_t value) {
   return true;
 }
 
+bool Square::same_allowed(const Square& sq) {
+  if (number_allowed()!=sq.number_allowed())
+    return false;
+  for (auto j=0; j<number_allowed(); j++) {
+    if (allowed_at(j)!=sq.allowed_at(j))
+      return false;
+  }
+  return true;
+}
+
 std::ostream& operator<<(std::ostream& os, const Square& sq) {
   os << "r: " << (unsigned)sq._r << " c: " << (unsigned)sq._c << " value: " << (unsigned)sq._value;
   return os;

@@ -26,6 +26,9 @@ public:
   const uint8_t number_allowed() const {return _allowed.number_allowed();}
   const uint8_t allowed_at(const uint8_t idx) const {return _allowed.at(idx);}
 
+//comparison to other squares
+  bool same_allowed(const Square& sq);
+
 //others
   bool is_value_set() const { return _value!=0;}
   bool set_value(const uint8_t value); //check if it can disallow except, then set value
