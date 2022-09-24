@@ -14,15 +14,22 @@ bool AllowedValues::disallow(const uint8_t value) {
 
   auto j=0;
   while (j<_size) {
-    if (_values[j]!=value) {
+    if (_values[j]!=value)
       j++;
-      continue;
-    }
-    _size--;
-    std::swap(_values[j], _values[_size]);
-    return true;
+    else
+      break;
   }
-  return false;
+
+  if (j==_size)
+    return false;
+
+  while (j+1<_size) {
+    std::swap(_values[j], _values[j+1]);
+    j++;
+  }
+  _size--;
+  return true;
+
 }
 
 bool AllowedValues::disallow_except(const uint8_t value) {
@@ -32,13 +39,14 @@ bool AllowedValues::disallow_except(const uint8_t value) {
 
   auto j=0;
   while (j<_size) {
-    if (_values[j]==value) {
+    if (_values[j]==value)
+      break;
+    else
       j++;
-      continue;
-    }
-    _size--;
-    std::swap(_values[j], _values[_size]);
   }
+
+  std::swap(_values[j], _values[0]);
+  _size=1;
 
   return true;
 }
