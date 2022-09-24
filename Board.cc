@@ -93,7 +93,7 @@ bool Board::solve() {
 
   while (activity) {
 
-    if (naked_single()) {
+    if (process_all_squares(&Board::naked_single_helper)) {
       continue;
     }
     if (process_all_groups(&Board::hidden_single_helper)) {
@@ -135,21 +135,16 @@ bool Board::process_square(std::shared_ptr<Square> square_to_process) {
 }
 
 //check each square if it has only a single option
-bool Board::naked_single() {
-  bool activity = false;
-  for (auto square : _squares) {
-
-    if (square->is_value_set())
-      continue;
-    if (square->number_allowed() > 1)
-      continue;
-    auto value = square->allowed_at(0);
-    if (!square->set_value(value))
-      return false;
-    std::cout << "naked single: " << *square << std::endl;
-    activity |= process_square(square);
-  }
-  return activity;
+bool Board::naked_single_helper(std::shared_ptr<Square> square) {
+  if (square->is_value_set())
+    return false;
+  if (square->number_allowed() > 1)
+    return false;
+  auto value = square->allowed_at(0);
+  if (!square->set_value(value))
+    return false;
+  std::cout << "naked single: " << *square << std::endl;
+  return process_square(square);
 }
 
 bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
@@ -177,6 +172,13 @@ bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
     std::cout << "hidden single: " << *square << std::endl;
     activity |= process_square(square);
   }
+  return activity;
+}
+
+bool Board::process_all_squares(bool (Board::*helper)(std::shared_ptr<Square>)) {
+  bool activity = false;
+  for (auto square : _squares)
+    activity |= (this->*helper)(square);
   return activity;
 }
 
