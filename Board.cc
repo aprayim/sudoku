@@ -212,43 +212,35 @@ bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
     return false;
 
   bool activity = false;
-  auto squares = group->squares();
-  //groups of three elements in houses
-  std::array<uint8_t, 9> dum;
-  dum.fill(0);
-  for (auto j=0; j<3; j++) {
-    for (auto k=0; k<3; k++) {
-      auto square_idx = j*3+k;
-      auto square = squares[square_idx];
-      for (auto p=0; p<square->number_allowed(); p++) {
-        auto value = square->allowed_at(p);
-        auto idx = value-1;
-        if (dum[idx]==0)
-          dum[idx] = j+1;
-        else if (dum[idx]!=j+1)
-          dum[idx] = 4;
-      }
+  std::array<uint8_t, 9> house_indices;
+  house_indices.fill(9);
+  for (auto sq : group->squares()) {
+    if (sq->is_value_set())
+      continue;
+    for (auto j=0; j<sq->number_allowed(); j++) {
+      auto value = sq->allowed_at(j);
+      auto idx = value-1;
+      if (house_indices[idx]==9)
+        house_indices[idx] = sq->h();
+      else if (house_indices[idx] != sq->h())
+        house_indices[idx] = 10;
     }
   }
-  
+
   for (auto idx=0; idx<9; idx++) {
-    if (!dum[idx] || dum[idx]==4)
+    if (house_indices[idx]>=9)
       continue;
     auto value = idx+1;
-    auto sq = squares[(dum[idx]-1)*3];//first square in the house
-    auto r = sq->r();
-    auto c = sq->c();
-    auto house = _houses[sq->h()];
-    for (auto hsq : house->squares()) {
-      if (type==Group::Type::ROW && hsq->r()==r)
+    auto house = _houses[house_indices[idx]];
+    for (auto sq : house->squares()) {
+      if (group->type()==Group::Type::ROW && group->idx()==sq->r())
         continue;
-      else if (type==Group::Type::COLUMN && hsq->c()==c)
+      if (group->type()==Group::Type::COLUMN && group->idx()==sq->c())
         continue;
-      bool removed = hsq->disallow(value);
-      if (!removed)
+      if (!sq->disallow(value))
         continue;
       activity = true;
-      std::cout << "locked candidate: removed " << value << " from " << *hsq << std::endl;
+      std::cout << "locked candidate: removed " << value << " from " << *sq << std::endl;
     }
   }
 
