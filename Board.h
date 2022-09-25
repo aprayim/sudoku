@@ -41,6 +41,7 @@ private: //solve functions
   bool hidden_single_helper(std::shared_ptr<Group> group);
   bool naked_pair_helper(std::shared_ptr<Group> group);
   bool locked_candidate_helper(std::shared_ptr<Group> group);
+  bool pointing_tuple_helper(std::shared_ptr<Group> group);
 
 private: //utilities
   uint8_t rc_to_h(uint8_t r, uint8_t c) {return (r/3)*3+c/3;}

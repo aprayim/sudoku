@@ -104,6 +104,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::locked_candidate_helper)) {
       continue;
     }
+    if (process_all_groups(&Board::pointing_tuple_helper)) {
+      continue;
+    }
 
     activity = false;
   }
@@ -206,9 +209,7 @@ bool Board::naked_pair_helper(std::shared_ptr<Group> group) {
 
 bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
 
-  auto type = group->type();
-
-  if (type==Group::Type::HOUSE)
+  if (group->type()==Group::Type::HOUSE)
     return false;
 
   bool activity = false;
@@ -244,6 +245,68 @@ bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
     }
   }
 
+  return activity;
+}
+
+bool Board::pointing_tuple_helper(std::shared_ptr<Group> group) {
+
+  if (group->type() != Group::Type::HOUSE)
+    return false;
+
+  auto update = [](uint8_t idx, uint8_t j, std::array<uint8_t, 9>& indices) {
+    if (indices[idx]==9)
+      indices[idx]=j;
+    else if (indices[idx]!=j)
+      indices[idx] = 10;
+  };
+
+  bool activity = false;
+
+  std::array<uint8_t, 9> column_indices, row_indices;
+  column_indices.fill(9);
+  row_indices.fill(9);
+  for (auto sq : group->squares()) {
+    if (sq->is_value_set())
+      continue;
+    for (auto j=0; j<sq->number_allowed(); j++) {
+      auto value = sq->allowed_at(j);
+      auto idx = value-1;
+      update(idx, sq->r(), row_indices);
+      update(idx, sq->c(), column_indices);
+    }
+  }
+
+  //for rows
+  for (auto idx=0; idx<9; idx++) {
+    if (row_indices[idx]>=9)
+      continue;
+    auto value = idx+1;
+    auto row = _rows[row_indices[idx]];
+    for (auto sq : row->squares()) {
+      if (sq->h()==group->idx())
+        continue;
+      if (!sq->disallow(value))
+        continue;
+      std::cout << "Pointing Tuple: removed "  << value << " from " << *sq << std::endl;
+      activity = true;
+    }
+  }
+
+  //for columns
+  for (auto idx=0; idx<9; idx++) {
+    if (column_indices[idx]>=9)
+      continue;
+    auto value = idx+1;
+    auto column = _columns[column_indices[idx]];
+    for (auto sq : column->squares()) {
+      if (sq->h()==group->idx())
+        continue;
+      if (!sq->disallow(value))
+        continue;
+      std::cout << "Pointing Tuple: removed " << value << " from " << *sq << std::endl;
+      activity = true;
+    }
+  }
   return activity;
 }
 

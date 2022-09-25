@@ -18,9 +18,9 @@ int main(const int argc, const char* argv[]) {
     std::cout << "init board: " << std::endl;
     std::cout << board << std::endl;
 
-    board.solve();
+    auto solved = board.solve();
 
-    std::cout << "solved board: " << std::endl;
+    std::cout << (solved ? "solved board: " : "unable to solve: ")  << std::endl;
     std::cout << board << std::endl;
   }
   catch (std::exception& e)
