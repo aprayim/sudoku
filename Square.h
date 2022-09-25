@@ -12,11 +12,12 @@ public:
   Square() = delete;
   Square(const Square&) = delete;
   Square(Square&&) = delete;
-  explicit Square(int r, int c) : _r(r), _c(c), _value(0) {}
+  explicit Square(uint8_t r, uint8_t c, uint8_t h) : _r(r), _c(c), _h(h), _value(0) {}
 
 //basic getters
   uint8_t r() const {return _r;}
   uint8_t c() const {return _c;}
+  uint8_t h() const {return _h;}
   uint8_t value() const {return _value;}
 
 //interface to allowed values
@@ -37,7 +38,7 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const Square& sq);
 
 private:
-  uint8_t _r, _c;
+  uint8_t _r, _c, _h;
   uint8_t _value;
   AllowedValues _allowed;
 };

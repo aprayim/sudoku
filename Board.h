@@ -43,6 +43,6 @@ private: //solve functions
   bool locked_candidate_helper(std::shared_ptr<Group> group);
 
 private: //utilities
-  std::shared_ptr<Group> group_from_index(const uint8_t r, const uint8_t c, const Group::Type type);
+  uint8_t rc_to_h(uint8_t r, uint8_t c) {return (r/3)*3+c/3;}
   
 };

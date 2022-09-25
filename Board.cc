@@ -10,12 +10,11 @@ Board::Board(std::ifstream& is) {
 
   for (auto r=0; r<9; r++) {
     for (auto c=0; c<9; c++) {
-      _squares[r*9+c] = std::make_shared<Square>(r, c);
+      _squares[r*9+c] = std::make_shared<Square>(r, c, rc_to_h(r, c));
     }
   }
 
   //std::cout << "created squares" << std::endl;
-  
   std::string line;
   std::vector<size_t> squares_to_process;
   auto r=0;
@@ -51,7 +50,7 @@ Board::Board(std::ifstream& is) {
     for (auto c=0; c<9; c++) {
       buffer[c] = _squares[r*9+c];
     } 
-    _rows[r] = std::make_shared<Group>(buffer, Group::Type::ROW);
+    _rows[r] = std::make_shared<Group>(buffer, Group::Type::ROW, r);
   } 
   //std::cout << "setting up columns" << std::endl;
   //columns
@@ -59,7 +58,7 @@ Board::Board(std::ifstream& is) {
     for (auto r=0; r<9; r++) {
       buffer[r] = _squares[r*9+c];
     }
-    _columns[c] = std::make_shared<Group>(buffer, Group::Type::COLUMN);
+    _columns[c] = std::make_shared<Group>(buffer, Group::Type::COLUMN, c);
   }
   //std::cout << "setting up houses" << std::endl;
   //houses
@@ -74,7 +73,7 @@ Board::Board(std::ifstream& is) {
         }
       }
       //std::cout << "building house " << xr << " " << xc << std::endl;
-      _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE);
+      _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE, xr*3+xc);
       //std::cout << "house built." << std::endl;
     }
   }
@@ -125,9 +124,9 @@ bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
   auto c = square_to_process->c();
   auto value = square_to_process->value();
 
-  auto row = group_from_index(r, c, Group::Type::ROW);
-  auto column = group_from_index(r, c, Group::Type::COLUMN);
-  auto house = group_from_index(r, c, Group::Type::HOUSE);
+  auto row = _rows[r];
+  auto column = _columns[c];
+  auto house = _houses[rc_to_h(r, c)];
 
   std::array<std::shared_ptr<Group>, 3> groups = {row, column, house};
   for (auto group : groups) {
@@ -239,7 +238,7 @@ bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
     auto sq = squares[(dum[idx]-1)*3];//first square in the house
     auto r = sq->r();
     auto c = sq->c();
-    auto house = group_from_index(r, c, Group::Type::HOUSE);
+    auto house = _houses[sq->h()];
     for (auto hsq : house->squares()) {
       if (type==Group::Type::ROW && hsq->r()==r)
         continue;
@@ -278,26 +277,16 @@ bool Board::process_all_groups(bool (Board::*helper)(std::shared_ptr<Group>)) {
   return activity;
 }
 
-std::shared_ptr<Group> Board::group_from_index(const uint8_t r, const uint8_t c, const Group::Type type) {
-  if (type==Group::Type::ROW)
-    return _rows[r];
-  else if (type==Group::Type::COLUMN)
-    return _columns[c];
-  else if (type==Group::Type::HOUSE) {
-    const auto xr = r/3;
-    const auto xc = c/3;
-    return _houses[xr*3+xc];
-  }
-  throw std::runtime_error("bad group type in group_from_index");
-  return nullptr;
-}
-
 std::ostream& operator<<(std::ostream& os, const Board& board)
 {
   for (auto r=0; r<9; r++) {
     auto delim="";
     for (auto c=0; c<9; c++) {
-      os << delim << (unsigned)board._squares[r*9+c]->value();
+      const unsigned val = board._squares[r*9+c]->value();
+      if (val)
+        os << delim << val;
+      else
+        os << delim << "_";
       delim=",";
     }
     os << std::endl;
