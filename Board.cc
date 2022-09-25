@@ -276,37 +276,27 @@ bool Board::pointing_tuple_helper(std::shared_ptr<Group> group) {
     }
   }
 
-  //for rows
-  for (auto idx=0; idx<9; idx++) {
-    if (row_indices[idx]>=9)
-      continue;
-    auto value = idx+1;
-    auto row = _rows[row_indices[idx]];
-    for (auto sq : row->squares()) {
-      if (sq->h()==group->idx())
+  auto process = [](std::array<std::shared_ptr<Group>, 9>& relevant_groups, uint8_t house_index,  std::array<uint8_t, 9>& indices) {
+    bool activity = false;
+    for (auto idx=0; idx<9; idx++) {
+      if (indices[idx]>=9)
         continue;
-      if (!sq->disallow(value))
-        continue;
-      std::cout << "Pointing Tuple: removed "  << value << " from " << *sq << std::endl;
-      activity = true;
+      auto value = idx+1;
+      auto group = relevant_groups[indices[idx]];
+      for (auto sq : group->squares()) {
+        if (sq->h()==house_index)
+          continue;
+        if (!sq->disallow(value))
+          continue;
+        std::cout << "Pointing Tuple: removed " << value << " from " << *sq << std::endl;
+        activity = true;
+      }
     }
-  }
+    return activity;
+  };
 
-  //for columns
-  for (auto idx=0; idx<9; idx++) {
-    if (column_indices[idx]>=9)
-      continue;
-    auto value = idx+1;
-    auto column = _columns[column_indices[idx]];
-    for (auto sq : column->squares()) {
-      if (sq->h()==group->idx())
-        continue;
-      if (!sq->disallow(value))
-        continue;
-      std::cout << "Pointing Tuple: removed " << value << " from " << *sq << std::endl;
-      activity = true;
-    }
-  }
+  activity |= process(_rows, group->idx(), row_indices);
+  activity |= process(_columns, group->idx(), column_indices);
   return activity;
 }
 
