@@ -9,9 +9,9 @@ class Group {
 
 public:
   enum Type {
-    ROW,
-    COLUMN,
-    HOUSE
+    ROW=1,
+    COLUMN=2,
+    HOUSE=4,
   };
 
 public:
@@ -23,6 +23,7 @@ public:
 
 //utilities
   const std::array<std::shared_ptr<Square>, 9>& squares() const {return _squares;}
+  const Type& type() const {return _type;}
 
 private:
   std::array<std::shared_ptr<Square>, 9> _squares;
