@@ -102,6 +102,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::naked_pair_helper)) {
       continue;
     }
+    if (process_all_groups(&Board::locked_candidate_helper)) {
+      continue;
+    }
 
     activity = false;
   }
@@ -199,6 +202,57 @@ bool Board::naked_pair_helper(std::shared_ptr<Group> group) {
       }
     }
   }
+  return activity;
+}
+
+bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
+
+  auto type = group->type();
+
+  if (type==Group::Type::HOUSE)
+    return false;
+
+  bool activity = false;
+  auto squares = group->squares();
+  //groups of three elements in houses
+  std::array<uint8_t, 9> dum;
+  dum.fill(0);
+  for (auto j=0; j<3; j++) {
+    for (auto k=0; k<3; k++) {
+      auto square_idx = j*3+k;
+      auto square = squares[square_idx];
+      for (auto p=0; p<square->number_allowed(); p++) {
+        auto value = square->allowed_at(p);
+        auto idx = value-1;
+        if (dum[idx]==0)
+          dum[idx] = j+1;
+        else if (dum[idx]!=j+1)
+          dum[idx] = 4;
+      }
+    }
+  }
+  
+  for (auto idx=0; idx<9; idx++) {
+    if (!dum[idx] || dum[idx]==4)
+      continue;
+    auto value = idx+1;
+    auto sq = squares[(dum[idx]-1)*3];//first square in the house
+    auto r = sq->r();
+    auto c = sq->c();
+    auto house = group_from_index(r, c, Group::Type::HOUSE);
+    for (auto hsq : house->squares()) {
+      if (type==Group::Type::ROW && hsq->r()==r)
+        continue;
+      else if (type==Group::Type::COLUMN && hsq->c()==c)
+        continue;
+      bool removed = hsq->disallow(value);
+      if (!removed)
+        continue;
+      activity = true;
+      std::cout << "locked candidate: removed " << value << " from " << *hsq << std::endl;
+    }
+  }
+
   return activity;
 }
 

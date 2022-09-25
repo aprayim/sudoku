@@ -40,6 +40,7 @@ private: //solve functions
   bool naked_single_helper(std::shared_ptr<Square> square);
   bool hidden_single_helper(std::shared_ptr<Group> group);
   bool naked_pair_helper(std::shared_ptr<Group> group);
+  bool locked_candidate_helper(std::shared_ptr<Group> group);
 
 private: //utilities
   std::shared_ptr<Group> group_from_index(const uint8_t r, const uint8_t c, const Group::Type type);
