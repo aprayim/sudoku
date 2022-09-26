@@ -25,6 +25,10 @@ bool Square::same_allowed(const Square& sq) {
   return true;
 }
 
+bool operator==(const Square& sq1, const Square& sq2) {
+  return sq1._r==sq2._r && sq1._c==sq2._c;
+}
+
 std::ostream& operator<<(std::ostream& os, const Square& sq) {
   os << "r: " << (unsigned)sq._r+1 << " c: " << (unsigned)sq._c+1 << " value: " << (unsigned)sq._value;
   return os;

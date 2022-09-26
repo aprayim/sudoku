@@ -107,6 +107,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::pointing_tuple_helper)) {
       continue;
     }
+    if (process_all_groups(&Board::hidden_pair_helper)) {
+      continue;
+    }
 
     activity = false;
   }
@@ -117,6 +120,24 @@ bool Board::solve() {
       return false;
   }
   return true;
+}
+
+bool Board::solve_hidden_pair(uint8_t idx, Group::Type type) {
+  std::shared_ptr<Group> group;
+  switch (type) {
+  case Group::Type::ROW:
+    group = _rows[idx];
+    break;
+  case Group::Type::COLUMN:
+    group = _columns[idx];
+    break;
+  case Group::Type::HOUSE:
+    group = _houses[idx];
+    break;
+  default:
+    return false;
+  }
+  return hidden_pair_helper(group);
 }
 
 bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
@@ -307,6 +328,94 @@ bool Board::pointing_tuple_helper(std::shared_ptr<Group> group) {
 
   activity |= process(_rows, group->idx(), row_indices);
   activity |= process(_columns, group->idx(), column_indices);
+  return activity;
+}
+
+bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
+
+  std::array<uint8_t, 9> first, second;
+  first.fill(9);
+  second.fill(9);
+
+  for (auto k=0; k<9; k++) {
+    auto sq = group->squares()[k];
+    for (auto j=0; j<sq->number_allowed(); j++) {
+      auto value = sq->allowed_at(j);
+      auto idx = value-1;
+      if (first[idx]==9)
+        first[idx] = k;
+      else if (second[idx]==9)
+        second[idx] = k;
+      else {
+        first[idx]=10;
+      }
+    }
+  }
+
+  //for (unsigned f : first)
+  //  std::cout << f << ",";
+  //std::cout << std::endl;
+  //for (unsigned s : second)
+  //  std::cout << s << ",";
+  //std::cout << std::endl;
+
+  bool activity = false;
+  for (auto p=0; p<9; p++) {
+    if (first[p]>=9 || second[p]>=9)
+      continue;
+    for (auto q=p+1; q<9; q++) {
+      if (first[p]!=first[q])
+        continue;
+      if (second[p]!=second[q])
+        continue;
+
+      bool cur_activity = false;
+      auto value1=p+1;
+      auto value2=q+1;
+      auto sq1 = group->squares()[first[p]];
+      auto sq2 = group->squares()[second[p]];
+
+      //std::cout << value1 << " " << value2 << std::endl;
+      //std::cout << *sq1 << std::endl;
+      //std::cout << *sq2 << std::endl;
+
+      cur_activity |= sq1->disallow_except(value1, value2);
+      cur_activity |= sq2->disallow_except(value1, value2);
+
+      auto disallow_from_group = [](std::shared_ptr<Group> g, const Square& sq1, const Square& sq2, uint8_t value1, uint8_t value2) {
+        bool activity = false;
+        for (auto sq : g->squares()) {
+          if (*sq==sq1 || *sq==sq2)
+            continue;
+          activity |= sq->disallow(value1);
+          activity |= sq->disallow(value2);
+        }
+        return activity;
+      };
+      
+      //row
+      if (sq1->r()==sq2->r()) {
+        cur_activity |= disallow_from_group(_rows[sq1->r()], *sq1, *sq2, value1, value2);
+      }
+      //column
+      if (sq1->c()==sq2->c()) {
+        cur_activity |= disallow_from_group(_columns[sq1->c()], *sq1, *sq2, value1, value2);
+      }
+      //house
+      if (sq1->h()==sq2->h()) {
+        cur_activity |= disallow_from_group(_houses[sq1->h()], *sq1, *sq2, value1, value2);
+      }
+      
+      if (!cur_activity)
+        continue;
+      activity = true;
+      if (sq1->h()==sq2->h())
+        std::cout << "Hidden pair: ";
+      else
+        std::cout << "Hidden pair (split): ";
+      std::cout  << *sq1 << " " << *sq2 << ", values: " << value1 << "," << value2 << std::endl;
+    }
+  }
   return activity;
 }
 

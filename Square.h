@@ -24,6 +24,7 @@ public:
   bool allowed(const uint8_t value) const {return _allowed.allowed(value);}
   bool disallow(const uint8_t value) {return _allowed.disallow(value);}
   bool disallow_except(const uint8_t value) {return _allowed.disallow_except(value);}
+  bool disallow_except(const uint8_t value1, const uint8_t value2) {return _allowed.disallow_except(value1, value2);}
   const uint8_t number_allowed() const {return _allowed.number_allowed();}
   const uint8_t allowed_at(const uint8_t idx) const {return _allowed.at(idx);}
 
@@ -34,7 +35,8 @@ public:
   bool is_value_set() const { return _value!=0;}
   bool set_value(const uint8_t value); //check if it can disallow except, then set value
 
-//output
+//friends
+  friend bool operator==(const Square& sq1, const Square& sq2);
   friend std::ostream& operator<<(std::ostream& os, const Square& sq);
 
 private:
