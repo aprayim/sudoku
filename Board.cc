@@ -194,14 +194,24 @@ bool Board::naked_pair_helper(std::shared_ptr<Group> group) {
       if (!squares[j]->same_allowed(*(squares[k])))
         continue;
 
-      std::cout << "Naked pair: " << *(squares[j]) << " " << *(squares[k]) << std::endl;
-      
+      bool cur_activity=false;
       for (auto p=0; p<9; p++) {
         if (p==j || p==k)
           continue;
-        activity |= squares[p]->disallow(squares[j]->allowed_at(0));
-        activity |= squares[p]->disallow(squares[j]->allowed_at(1));
+        cur_activity |= squares[p]->disallow(squares[j]->allowed_at(0));
+        cur_activity |= squares[p]->disallow(squares[j]->allowed_at(1));
       }
+
+      if (!cur_activity)
+        continue;
+
+      if (squares[j]->h()==squares[k]->h())
+        std::cout << "Naked pair: ";
+      else
+        std::cout << "Naked pair (split): ";
+      std::cout << *(squares[j]) << " " << *(squares[k]) << std::endl;
+
+      activity = true;
     }
   }
   return activity;
