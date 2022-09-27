@@ -6,13 +6,8 @@
 
 bool Square::set_value(const uint8_t value) {
 
-  if (!_allowed.disallow_except(value)) {
-    LOG(ERROR) << "Square: " << _r << "," << _c << "unable to set value to: " << (unsigned)_value << std::endl;
-    return false;
-  }
-
+  _allowed.disallow_except(value);
   _value = value;
-
   return true;
 }
 

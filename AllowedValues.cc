@@ -1,5 +1,7 @@
 #include "AllowedValues.h"
 
+#include <glog/logging.h>
+
 #include <algorithm>
 
 bool AllowedValues::allowed(const uint8_t value) const {
@@ -35,6 +37,10 @@ bool AllowedValues::disallow(const uint8_t value) {
 bool AllowedValues::disallow_except(const uint8_t value) {
 
   if (!allowed(value))
+    LOG(FATAL) << "disallow_except: " << value << " not allowed.";
+
+  //because no change
+  if (_size==1)
     return false;
 
   auto j=0;
@@ -54,6 +60,9 @@ bool AllowedValues::disallow_except(const uint8_t value) {
 
 bool AllowedValues::disallow_except(const uint8_t value1, const uint8_t value2) {
   if (!allowed(value1) || !allowed(value2))
+    return false;
+
+  if (_size==2)
     return false;
 
   auto j=0, k=0;
