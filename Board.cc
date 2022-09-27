@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <numeric>
 
 Board::Board(std::ifstream& is) {
 
@@ -100,6 +101,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::hidden_pair_helper)) {
       continue;
     }
+    if (process_all_groups(&Board::naked_triple_helper)) {
+      continue;
+    }
 
     activity = false;
   }
@@ -113,21 +117,11 @@ bool Board::solve() {
 }
 
 bool Board::solve_hidden_pair(uint8_t idx, Group::Type type) {
-  std::shared_ptr<Group> group;
-  switch (type) {
-  case Group::Type::ROW:
-    group = _rows[idx];
-    break;
-  case Group::Type::COLUMN:
-    group = _columns[idx];
-    break;
-  case Group::Type::HOUSE:
-    group = _houses[idx];
-    break;
-  default:
-    return false;
-  }
-  return hidden_pair_helper(group);
+  return hidden_pair_helper(get_group(idx, type));
+}
+
+bool Board::solve_naked_triple(uint8_t idx, Group::Type type) {
+  return naked_triple_helper(get_group(idx, type));
 }
 
 bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
@@ -399,6 +393,69 @@ bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
     }
   }
   return activity;
+}
+
+bool Board::naked_triple_helper(std::shared_ptr<Group> group) {
+
+  auto update = [](std::array<uint8_t, 9>& dum, std::shared_ptr<Square> sq) {
+    for (auto j=0; j<sq->number_allowed(); j++)
+      dum[sq->allowed_at(j)-1]=1;
+  };
+  bool activity = false;
+  auto squares = group->squares();
+  for (auto j=0; j<9; j++) {
+    if (squares[j]->is_value_set() || squares[j]->number_allowed()>3)
+      continue;
+    for (auto k=j+1; k<9; k++) {
+      if (squares[k]->is_value_set() || squares[k]->number_allowed()>3)
+        continue;
+      for (auto l=k+1; l<9; l++) {
+        if (squares[l]->is_value_set() || squares[l]->number_allowed()>3)
+          continue;
+        std::array<uint8_t, 9> dum;
+        dum.fill(0);
+        update(dum, squares[j]);
+        update(dum, squares[k]);
+        update(dum, squares[l]);
+        if (std::accumulate(dum.begin(), dum.end(), 0)>3)
+          continue;
+        bool cur_activity = false;
+        std::array<uint8_t, 3> values;
+        auto vidx=0;
+        for (auto idx=0; idx<9; idx++) {
+          if (!dum[idx])
+            continue;
+          auto value = idx+1;
+          values[vidx++] = value;
+          for (auto x=0; x<9; x++) {
+            if (x==j || x==k || x==l)
+              continue;
+            cur_activity |= squares[x]->disallow(value);
+          }
+        }
+        if (!cur_activity)
+          continue;
+        activity = true;
+        LOG(INFO) << "Naked Triple: " << *squares[j] << " " << *squares[k] << " " << *squares[l] << " values: " << (unsigned)values[0] << " " << (unsigned)values[1] << " " << (unsigned)values[2];
+      }
+    }
+  }
+  return activity;
+}
+
+std::shared_ptr<Group> Board::get_group(uint8_t idx, Group::Type type) {
+  idx--;
+  switch (type) {
+  case Group::Type::ROW:
+    return _rows[idx];
+  case Group::Type::COLUMN:
+    return _columns[idx];
+  case Group::Type::HOUSE:
+    return _houses[idx];
+  default:
+    break;
+  }
+  return nullptr;
 }
 
 bool Board::process_all_squares(bool (Board::*helper)(std::shared_ptr<Square>)) {

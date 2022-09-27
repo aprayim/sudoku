@@ -1,2 +1,4 @@
-- naked_triple
 - xwing
+- consolidate naked stuff into a templated paradigm if you can
+- create bazel tests
+- upload to repo with some sort of CI and testing on every PR
