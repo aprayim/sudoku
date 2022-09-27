@@ -2,14 +2,18 @@ cc_library(
     name = "sudoku-solver",
     srcs = [
             "AllowedValues.cc",
-            "Board.cc",
             "Square.cc",
+            "Group.cc",
+            "Board.cc",
             ],
     hdrs = [
             "AllowedValues.h",
-            "Board.h",
-            "Group.h",
             "Square.h",
+            "Group.h",
+            "Board.h",
+            ],
+    deps = [
+            "@com_github_google_glog//:glog",
             ],
 )
 
@@ -19,6 +23,7 @@ cc_binary(
             "main.cc",
             ],
     deps = [
-            ":sudoku-solver"
+            ":sudoku-solver",
+            "@com_github_gflags_gflags//:gflags",
             ],
 )

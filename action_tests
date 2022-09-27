@@ -1,0 +1,2 @@
+--file ../hidden_pair_split_example.sudoku --action hidden_pair,5,COLUMN
+--file ../hidden_pair_example.sudoku --action hidden_pair,4,HOUSE

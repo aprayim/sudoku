@@ -1,16 +1,17 @@
 #include "Square.h"
 
+#include <glog/logging.h>
+
 #include <iostream>
 
 bool Square::set_value(const uint8_t value) {
 
   if (!_allowed.disallow_except(value)) {
-    //std::cout << "unable to set value to: " << (unsigned)_value << std::endl;
+    LOG(ERROR) << "Square: " << _r << "," << _c << "unable to set value to: " << (unsigned)_value << std::endl;
     return false;
   }
 
   _value = value;
-  //std::cout << "setting value to: " << (unsigned)_value << std::endl;
 
   return true;
 }
@@ -30,6 +31,6 @@ bool operator==(const Square& sq1, const Square& sq2) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Square& sq) {
-  os << "r: " << (unsigned)sq._r+1 << " c: " << (unsigned)sq._c+1 << " value: " << (unsigned)sq._value;
+  os << "r" << (unsigned)sq._r+1 << "c" << (unsigned)sq._c+1 << "h" << (unsigned)sq._h+1;
   return os;
 }

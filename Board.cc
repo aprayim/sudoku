@@ -1,5 +1,7 @@
 #include "Board.h"
 
+#include <glog/logging.h>
+
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -14,13 +16,10 @@ Board::Board(std::ifstream& is) {
     }
   }
 
-  //std::cout << "created squares" << std::endl;
   std::string line;
   std::vector<size_t> squares_to_process;
   auto r=0;
   while (getline(is, line)) {
-
-    //std::cout << "line: " << line << std::endl;
 
     if (r>=9)
       throw std::length_error("too many rows");
@@ -33,7 +32,6 @@ Board::Board(std::ifstream& is) {
       
       uint8_t value = (uint8_t)(x-'0');
       if (value) {
-        //std::cout << "r: " << r << " c: " << c << std::endl;
         const auto idx = r*9+c;
         _squares[idx]->set_value(value);
         squares_to_process.push_back(idx);
@@ -43,7 +41,6 @@ Board::Board(std::ifstream& is) {
     r++;
   }
 
-  //std::cout << "setting up rows" << std::endl;
   //rows
   std::array<std::shared_ptr<Square>, 9> buffer;
   for (auto r=0; r<9; r++) {
@@ -52,7 +49,6 @@ Board::Board(std::ifstream& is) {
     } 
     _rows[r] = std::make_shared<Group>(buffer, Group::Type::ROW, r);
   } 
-  //std::cout << "setting up columns" << std::endl;
   //columns
   for (auto c=0; c<9; c++) {
     for (auto r=0; r<9; r++) {
@@ -60,28 +56,22 @@ Board::Board(std::ifstream& is) {
     }
     _columns[c] = std::make_shared<Group>(buffer, Group::Type::COLUMN, c);
   }
-  //std::cout << "setting up houses" << std::endl;
   //houses
   for (auto xr=0; xr<3; xr++) {
     for (auto xc=0; xc<3; xc++) {
       auto idx = 0;
       for (auto r=xr*3; r<(xr+1)*3; r++) {
         for (auto c=xc*3; c<(xc+1)*3; c++) {
-          //std::cout << r << " " << c << " " << idx << std::endl;
           buffer[idx] = _squares[r*9+c];
           idx++;
         }
       }
-      //std::cout << "building house " << xr << " " << xc << std::endl;
       _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE, xr*3+xc);
-      //std::cout << "house built." << std::endl;
     }
   }
 
-  //std::cout << "created groups" << std::endl;
 
   for (auto idx : squares_to_process) {
-    //std::cout << "processing square: " << idx << std::endl;
     adjust_from_square(_squares[idx]);
   }
 }
@@ -172,7 +162,7 @@ bool Board::naked_single_helper(std::shared_ptr<Square> square) {
   auto value = square->allowed_at(0);
   if (!square->set_value(value))
     return false;
-  std::cout << "naked single: " << *square << std::endl;
+  LOG(INFO) << "naked single: " << *square << " value: " << (unsigned)value;
   return adjust_from_square(square);
 }
 
@@ -198,7 +188,7 @@ bool Board::hidden_single_helper(std::shared_ptr<Group> group) {
     auto value = j+1;
     auto square = result[j];
     square->set_value(value);
-    std::cout << "hidden single: " << *square << std::endl;
+    LOG(INFO) << "hidden single: " << *square << " value: " << (unsigned)value;
     activity |= adjust_from_square(square);
   }
   return activity;
@@ -215,22 +205,21 @@ bool Board::naked_pair_helper(std::shared_ptr<Group> group) {
       if (!squares[j]->same_allowed(*(squares[k])))
         continue;
 
+      auto value1 = squares[j]->allowed_at(0);
+      auto value2 = squares[j]->allowed_at(1);
+
       bool cur_activity=false;
       for (auto p=0; p<9; p++) {
         if (p==j || p==k)
           continue;
-        cur_activity |= squares[p]->disallow(squares[j]->allowed_at(0));
-        cur_activity |= squares[p]->disallow(squares[j]->allowed_at(1));
+        cur_activity |= squares[p]->disallow(value1);
+        cur_activity |= squares[p]->disallow(value2);
       }
 
       if (!cur_activity)
         continue;
 
-      if (squares[j]->h()==squares[k]->h())
-        std::cout << "Naked pair: ";
-      else
-        std::cout << "Naked pair (split): ";
-      std::cout << *(squares[j]) << " " << *(squares[k]) << std::endl;
+      LOG(INFO) << (squares[j]->h()==squares[k]->h() ? "Naked pair: " : "Naked pair (split): ") << *(squares[j]) << " " << *(squares[k]) << " values: " << (unsigned)value1 << " " << (unsigned)value2;
 
       activity = true;
     }
@@ -262,6 +251,7 @@ bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
   for (auto idx=0; idx<9; idx++) {
     if (house_indices[idx]>=9)
       continue;
+    bool cur_activity = false;
     auto value = idx+1;
     auto house = _houses[house_indices[idx]];
     for (auto sq : house->squares()) {
@@ -271,9 +261,12 @@ bool Board::locked_candidate_helper(std::shared_ptr<Group> group) {
         continue;
       if (!sq->disallow(value))
         continue;
-      activity = true;
-      std::cout << "locked candidate: removed " << value << " from " << *sq << std::endl;
+      cur_activity = true;
     }
+    if (!cur_activity)
+      continue;
+    activity = true;
+    LOG(INFO) << "Locked candidate: " << *group << " " << *house << " value: " << (unsigned)value;
   }
 
   return activity;
@@ -314,14 +307,18 @@ bool Board::pointing_tuple_helper(std::shared_ptr<Group> group) {
         continue;
       auto value = idx+1;
       auto group = relevant_groups[indices[idx]];
+      bool cur_activity = false;
       for (auto sq : group->squares()) {
         if (sq->h()==house_index)
           continue;
         if (!sq->disallow(value))
           continue;
-        std::cout << "Pointing Tuple: removed " << value << " from " << *sq << std::endl;
-        activity = true;
+        cur_activity = true;
       }
+      if (!cur_activity)
+        continue;
+      activity = true;
+      LOG(INFO) << "Pointing Tuple: House " << (unsigned)house_index+1 << " " << *group << " value: " << (unsigned)value;
     }
     return activity;
   };
@@ -352,13 +349,6 @@ bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
     }
   }
 
-  //for (unsigned f : first)
-  //  std::cout << f << ",";
-  //std::cout << std::endl;
-  //for (unsigned s : second)
-  //  std::cout << s << ",";
-  //std::cout << std::endl;
-
   bool activity = false;
   for (auto p=0; p<9; p++) {
     if (first[p]>=9 || second[p]>=9)
@@ -374,10 +364,6 @@ bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
       auto value2=q+1;
       auto sq1 = group->squares()[first[p]];
       auto sq2 = group->squares()[second[p]];
-
-      //std::cout << value1 << " " << value2 << std::endl;
-      //std::cout << *sq1 << std::endl;
-      //std::cout << *sq2 << std::endl;
 
       cur_activity |= sq1->disallow_except(value1, value2);
       cur_activity |= sq2->disallow_except(value1, value2);
@@ -409,11 +395,7 @@ bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
       if (!cur_activity)
         continue;
       activity = true;
-      if (sq1->h()==sq2->h())
-        std::cout << "Hidden pair: ";
-      else
-        std::cout << "Hidden pair (split): ";
-      std::cout  << *sq1 << " " << *sq2 << ", values: " << value1 << "," << value2 << std::endl;
+      LOG(INFO) << (sq1->h()==sq2->h() ? "Hidden pair: " : "Hidden pair (split): ") << *sq1 << " " << *sq2 << ", values: " << value1 << "," << value2;
     }
   }
   return activity;

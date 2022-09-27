@@ -1,43 +1,56 @@
 #include "Board.h"
 #include "Group.h"
 
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <sstream>
 
-int main(const int argc, const char* argv[]) {
+DEFINE_string(file, "", "file to read sudoku from");
+DEFINE_string(action, "", "proposed action, comma separated values with additional variables");
 
-  if (argc==1) {
-    std::cout << "no sudoku file given" << std::endl;
-  }
+int main(int argc, char* argv[]) {
+
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
 
   try
   {
-    std::ifstream file(argv[1]);
+    std::ifstream file(FLAGS_file);
 
     Board board(file);
 
     std::cout << "init board: " << std::endl;
     std::cout << board << std::endl;
 
-    if (argc==3) {
-      std::string action = argv[2];
-      if (action=="hidden_pair")
-      {
-        auto solved = board.solve_hidden_pair(4, Group::Type::HOUSE);
-        if (!solved)
-          std::cout << "unable to find " << action << std::endl;
-      }
-      else if (action=="hidden_pair_split")
-      {
-        auto solved = board.solve_hidden_pair(5, Group::Type::COLUMN);
-        if (!solved)
-          std:: cout << "unable to find " << action << std::endl;
-      }
-    }
-    else {
+    if (FLAGS_action.empty()) {
       auto solved = board.solve();
       std::cout << (solved ? "solved board: " : "unable to solve: ")  << std::endl;
       std::cout << board << std::endl;
+    }
+    else {
+      auto split_to_vector = [](const std::string& s, char delim=',') {
+        std::vector<std::string> out;
+        std::stringstream ss;
+        ss << s;
+        std::string dum;
+        while (std::getline(ss, dum, delim))
+          out.push_back(dum);
+        return out;
+      };
+
+      auto action = split_to_vector(FLAGS_action);
+      bool solved = false;
+      if (action[0]=="hidden_pair" || action[0]=="hidden_pair_split")
+        solved = board.solve_hidden_pair(std::stoi(action[1]), Group::string_to_group_type(action[2]));
+      else
+        LOG(FATAL) << "unknown action: " << action[0];
+
+      if (!solved)
+        LOG(ERROR) << "Unable to find action: " << action[0];
     }
   }
   catch (std::exception& e)
