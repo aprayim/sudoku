@@ -48,6 +48,8 @@ int main(int argc, char* argv[]) {
         solved = board.solve_hidden_pair(std::stoi(action[1]), Group::string_to_group_type(action[2]));
       else if (action[0]=="naked_triple")
         solved = board.solve_naked_triple(std::stoi(action[1]), Group::string_to_group_type(action[2]));
+      else if (action[0]=="xwing")
+        solved = board.solve_xwing();
       else
         LOG(FATAL) << "unknown action: " << action[0];
 

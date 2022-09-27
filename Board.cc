@@ -104,6 +104,9 @@ bool Board::solve() {
     if (process_all_groups(&Board::naked_triple_helper)) {
       continue;
     }
+    if (xwing_helper()) {
+      continue;
+    }
 
     activity = false;
   }
@@ -122,6 +125,10 @@ bool Board::solve_hidden_pair(uint8_t idx, Group::Type type) {
 
 bool Board::solve_naked_triple(uint8_t idx, Group::Type type) {
   return naked_triple_helper(get_group(idx, type));
+}
+
+bool Board::solve_xwing() {
+  return xwing_helper();
 }
 
 bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
@@ -440,6 +447,75 @@ bool Board::naked_triple_helper(std::shared_ptr<Group> group) {
       }
     }
   }
+  return activity;
+}
+
+//this is on the whole board
+bool Board::xwing_helper() {
+
+  auto fill_places = [](const uint8_t value, std::shared_ptr<Group> group, std::array<uint8_t, 9>& place) {
+    place.fill(0);
+    for (auto j=0; j<9; j++) {
+      auto sq = group->squares()[j];
+      if (sq->is_value_set())
+        continue;
+      if (!sq->allowed(value))
+        continue;
+      place[j] = 1;
+    }
+  };
+  
+  auto get_common_2 = [](const std::array<uint8_t, 9>& x, const std::array<uint8_t, 9>& y, std::array<uint8_t, 2>& indices) {
+    auto good=0;
+    for (auto j=0; j<9; j++) {
+      if (x[j]==1 && y[j]==1) {
+        if (good==2)
+          return false;
+        indices[good++] = j;
+      }
+      else if (x[j]==1 || y[j]==1)
+        return false;
+    }
+    return good==2;
+  };
+
+  auto process = [&fill_places,&get_common_2](std::array<std::shared_ptr<Group>, 9> primary, std::array<std::shared_ptr<Group>, 9> secondary, bool primary_is_rows) {
+    bool activity = false;
+    for (auto value=1; value<=9; value++) {
+      std::array<std::array<uint8_t, 9>, 9> places;
+      for (auto x=0; x<9; x++)
+        fill_places(value, primary[x], places[x]);
+      for (auto j=0; j<9; j++) {
+        for (auto k=j+1; k<9; k++) {
+          std::array<uint8_t, 2> indices;
+          if (!get_common_2(places[j], places[k], indices))
+            continue;
+
+          bool current_activity = false;
+          for (auto i : indices) {
+            auto g = primary_is_rows ? primary[j]->squares()[i]->c() : primary[j]->squares()[i]->r();
+            auto group = secondary[g];
+            for (auto p=0; p<9; p++) {
+              if (p==j || p==k)
+                continue;
+              if (!group->squares()[p]->disallow(value))
+                continue;
+              current_activity = true;
+            }
+          }
+          if (!current_activity)
+            continue;
+          LOG(INFO) << "X-Wing:" << (primary_is_rows ? " rows " : " columns ") << (unsigned)(j+1) << "," << (unsigned)(k+1) << (primary_is_rows ? " columns " : " rows ") <<  (unsigned)(indices[0]+1) << "," << (unsigned)(indices[1]+1) << " value " << value;
+          activity = true;
+        }
+      }
+    }
+    return activity;
+  };
+
+  bool activity = false;
+  activity |= process(_rows, _columns, /*primary_is_rows*/true);
+  activity |= process(_columns, _rows, /*primary_is_rows*/false);
   return activity;
 }
 

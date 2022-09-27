@@ -25,6 +25,7 @@ public: //solver
   bool solve();
   bool solve_hidden_pair(uint8_t idx, Group::Type type);
   bool solve_naked_triple(uint8_t idx, Group::Type type);
+  bool solve_xwing();
 
 public: //output
   friend std::ostream& operator<<(std::ostream& os, const Board& board);
@@ -46,6 +47,7 @@ private: //solve functions
   bool pointing_tuple_helper(std::shared_ptr<Group> group);
   bool hidden_pair_helper(std::shared_ptr<Group> group);
   bool naked_triple_helper(std::shared_ptr<Group> group);
+  bool xwing_helper();
 
 private: //utilities
   static uint8_t rc_to_h(uint8_t r, uint8_t c) {return (r/3)*3+c/3;}

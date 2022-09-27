@@ -1,3 +1,5 @@
 --file ../hidden_pair_split_example.sudoku --action hidden_pair,6,COLUMN
 --file ../hidden_pair_example.sudoku --action hidden_pair,5,HOUSE
 --file ../naked_triple_example.sudoku --action naked_triple,9,HOUSE
+--file ../xwing_example.sudoku --action xwing
+--file ../xwing_example2.sudoku --action xwing
