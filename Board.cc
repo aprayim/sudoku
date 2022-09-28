@@ -131,7 +131,7 @@ bool Board::solve_xwing() {
   return xwing_helper();
 }
 
-bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
+bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process, std::shared_ptr<std::vector<std::shared_ptr<Square>>> modified_squares) {
 
   bool activity = false;
 
@@ -147,7 +147,11 @@ bool Board::adjust_from_square(std::shared_ptr<Square> square_to_process) {
   for (auto group : groups) {
     auto squares = group->squares();
     for (auto square : squares) {
-      activity |= square->disallow(value);
+      if (!square->disallow(value))
+        continue;
+      activity = true;
+      if (modified_squares)
+        modified_squares->push_back(square);
     }
   }
 

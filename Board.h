@@ -35,7 +35,7 @@ private:
   std::array<std::shared_ptr<Square>, 81> _squares;
 
 private: //solve functions
-  bool adjust_from_square(std::shared_ptr<Square> sq);
+  bool adjust_from_square(std::shared_ptr<Square> sq, std::shared_ptr<std::vector<std::shared_ptr<Square>>> modified_squares=nullptr);
   //process all functions
   bool process_all_squares(bool (Board::*func)(std::shared_ptr<Square>));
   bool process_all_groups(bool (Board::*func)(std::shared_ptr<Group>));
