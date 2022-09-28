@@ -21,6 +21,7 @@ public:
   uint8_t value() const {return _value;}
 
 //interface to allowed values
+  bool allow(const uint8_t value) {return _allowed.allow(value);}
   bool allowed(const uint8_t value) const {return _allowed.allowed(value);}
   bool disallow(const uint8_t value) {return _allowed.disallow(value);}
   bool disallow_except(const uint8_t value) {return _allowed.disallow_except(value);}
@@ -34,6 +35,7 @@ public:
 //others
   bool is_value_set() const { return _value!=0;}
   bool set_value(const uint8_t value); //check if it can disallow except, then set value
+  bool unset();
 
 //friends
   friend bool operator==(const Square& sq1, const Square& sq2);

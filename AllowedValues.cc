@@ -4,6 +4,26 @@
 
 #include <algorithm>
 
+bool AllowedValues::allow(const uint8_t value) {
+  auto j=0;
+  while (j<_size) {
+    if (_values[j]<value)
+      j++;
+    else if (_values[j]==value)
+      return false;
+    else
+      break;
+  }
+  auto k=_size;
+  while (k>j) {
+    _values[k] = _values[k-1];
+    k--;
+  }
+  _values[k] = value;
+  _size++;
+  return true;
+}
+
 bool AllowedValues::allowed(const uint8_t value) const {
   for (auto j=0; j<_size; j++) {
     if (_values[j]==value)
@@ -77,4 +97,11 @@ bool AllowedValues::disallow_except(const uint8_t value1, const uint8_t value2) 
   }
   _size=2;
   return true;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const AllowedValues& allowed) {
+  for (auto j=0; j<allowed._size; j++)
+    os << (unsigned)allowed._values[j] << " ";
+  return os;
 }

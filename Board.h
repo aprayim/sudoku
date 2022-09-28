@@ -22,6 +22,7 @@ public: //constructors
   ~Board() {};
 
 public: //solver
+  bool solve_brute_force(uint8_t sq_idx=0);
   bool solve();
   bool solve_hidden_pair(uint8_t idx, Group::Type type);
   bool solve_naked_triple(uint8_t idx, Group::Type type);

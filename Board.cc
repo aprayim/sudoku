@@ -8,6 +8,9 @@
 #include <vector>
 #include <iostream>
 #include <numeric>
+#include <memory>
+#include <chrono>
+#include <thread>
 
 Board::Board(std::ifstream& is) {
 
@@ -75,6 +78,51 @@ Board::Board(std::ifstream& is) {
   for (auto idx : squares_to_process) {
     adjust_from_square(_squares[idx]);
   }
+}
+
+bool Board::solve_brute_force(uint8_t sq_idx) {
+
+  if (sq_idx==81) {
+    return true;
+  }
+  
+  //code to display brute force solution
+  //std::cout << *this << std::endl;
+  //std::cout << "\x1b[10A";
+  //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+  auto sq = _squares[sq_idx];
+
+  if (sq->is_value_set())
+    return solve_brute_force(sq_idx+1);
+
+  if (sq->number_allowed()==0)
+    return false;
+
+  std::shared_ptr<std::vector<std::shared_ptr<Square>>> vs = std::make_shared<std::vector<std::shared_ptr<Square>>>();
+  std::vector<uint8_t> allowed_values;
+  vs->reserve(81);
+  allowed_values.reserve(9);
+  for (auto j=0; j<sq->number_allowed(); j++)
+    allowed_values.push_back(sq->allowed_at(j));
+
+  for (auto value : allowed_values) {
+    LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    if (!sq->set_value(value))
+      LOG(FATAL) << "Unable to set value on square " << *sq;
+    adjust_from_square(sq, vs);
+    if (solve_brute_force(sq_idx+1))
+      return true;
+    if (!sq->unset())
+      LOG(FATAL) << "Unable to unset " << *sq;
+    for (auto _val : allowed_values)
+      sq->allow(_val);
+    for (auto msq : *vs) 
+      msq->allow(value);
+    vs->clear();
+    LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+  }
+  return false;
 }
 
 bool Board::solve() {

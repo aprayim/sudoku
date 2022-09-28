@@ -4,6 +4,13 @@
 
 #include <iostream>
 
+bool Square::unset() {
+  if (_value==0)
+    return false;
+  _value = 0;
+  return true;
+}
+
 bool Square::set_value(const uint8_t value) {
 
   _allowed.disallow_except(value);

@@ -1,5 +1,6 @@
 #include "Board.h"
 #include "Group.h"
+#include "AllowedValues.h"
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -11,11 +12,29 @@
 
 DEFINE_string(file, "", "file to read sudoku from");
 DEFINE_string(action, "", "proposed action, comma separated values with additional variables");
+DEFINE_bool(allowed_values_test, false, "test allowed values");
 
 int main(int argc, char* argv[]) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
+
+  if (FLAGS_allowed_values_test) {
+    AllowedValues a;
+    std::cout << a << std::endl;
+    a.disallow_except(5);
+    std::cout << a << std::endl;
+    a.allow(3);
+    std::cout << a << std::endl;
+    a.disallow(5);
+    std::cout << a << std::endl;
+    a.allow(5);
+    std::cout << a << std::endl;
+    a.allow(7);
+    std::cout << a << std::endl;
+    a.allow(1);
+    std::cout << a << std::endl;
+  }
 
   try
   {
@@ -50,6 +69,10 @@ int main(int argc, char* argv[]) {
         solved = board.solve_naked_triple(std::stoi(action[1]), Group::string_to_group_type(action[2]));
       else if (action[0]=="xwing")
         solved = board.solve_xwing();
+      else if (action[0]=="brute") {
+        solved = board.solve_brute_force();
+        std::cout << board << std::endl;
+      }
       else
         LOG(FATAL) << "unknown action: " << action[0];
 

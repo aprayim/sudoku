@@ -1,5 +1,4 @@
-- create brute force solver
+- create bazel tests
 - consolidate naked stuff into a template paradigm if you can
 - consolidate hidden stuff into a template paradigm if you can
-- create bazel tests
 - upload to repo with some sort of CI and testing on every PR
