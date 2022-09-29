@@ -24,8 +24,7 @@ public:
   bool allow(const uint8_t value) {return _allowed.allow(value);}
   bool allowed(const uint8_t value) const {return _allowed.allowed(value);}
   bool disallow(const uint8_t value) {return _allowed.disallow(value);}
-  bool disallow_except(const uint8_t value) {return _allowed.disallow_except(value);}
-  bool disallow_except(const uint8_t value1, const uint8_t value2) {return _allowed.disallow_except(value1, value2);}
+  bool disallow_except(std::initializer_list<uint8_t> values) {return _allowed.disallow_except(values);}
   const uint8_t number_allowed() const {return _allowed.number_allowed();}
   const uint8_t allowed_at(const uint8_t idx) const {return _allowed.at(idx);}
 

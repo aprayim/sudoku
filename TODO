@@ -1,4 +1,8 @@
-- create bazel tests
+- upload to repo with some sort of CI and testing on every PR
+- Board class should just be that, we should have functions that do
+    1) generate from basic file
+    2) generate from scratch
+    3) write to file with all allowed values info
+    4) reads from that file
 - consolidate naked stuff into a template paradigm if you can
 - consolidate hidden stuff into a template paradigm if you can
-- upload to repo with some sort of CI and testing on every PR

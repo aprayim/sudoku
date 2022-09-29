@@ -6,7 +6,7 @@
 
 bool AllowedValues::allow(const uint8_t value) {
 
-  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << (unsigned)value;
 
   auto j=0;
   while (j<_size) {
@@ -29,7 +29,7 @@ bool AllowedValues::allow(const uint8_t value) {
 
 bool AllowedValues::allowed(const uint8_t value) const {
 
-  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << (unsigned)value;
 
   for (auto j=0; j<_size; j++) {
     if (_values[j]==value)
@@ -40,7 +40,7 @@ bool AllowedValues::allowed(const uint8_t value) const {
 
 bool AllowedValues::disallow(const uint8_t value) {
 
-  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << (unsigned)value;
 
   auto j=0;
   while (j<_size) {
@@ -62,56 +62,32 @@ bool AllowedValues::disallow(const uint8_t value) {
 
 }
 
-bool AllowedValues::disallow_except(const uint8_t value) {
+bool AllowedValues::disallow_except(std::initializer_list<uint8_t> values) {
+  
+  for (auto value : values)
+    LOG_IF(FATAL, value==0 || value>9) << " bad value: " << (unsigned)value;
 
-  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
-
-  if (!allowed(value))
-    LOG(FATAL) << "disallow_except: " << value << " not allowed.";
-
-  //because no change
-  if (_size==1)
-    return false;
-
-  auto j=0;
-  while (j<_size) {
-    if (_values[j]==value)
-      break;
-    else
-      j++;
+  for (auto value : values) {
+    if (!allowed(value))
+      return false;
   }
 
-  std::swap(_values[j], _values[0]);
-  _size=1;
-
-  return true;
-}
-
-
-bool AllowedValues::disallow_except(const uint8_t value1, const uint8_t value2) {
-  
-  LOG_IF(FATAL, value1==0 || value1>9 || value2==0 || value2>9 ) << " bad values: " << value1 << " " << value2;
-
-  if (!allowed(value1) || !allowed(value2))
-    return false;
-
-  if (_size==2)
-    return false;
+  if (_size == values.size())
+    return false;//because nothing changes
 
   auto j=0, k=0;
-  while (j<_size) {
-    if (_values[j]==value1 || _values[j]==value2) {
+  while (j<_size && k<values.size()) {
+    auto k_th_element = *(values.begin()+k);
+    if (_values[j] == k_th_element) {
       std::swap(_values[j], _values[k]);
       k++;
-      if (k==2)
-        break;
     }
     j++;
   }
-  _size=2;
+
+  _size=k;
   return true;
 }
-
 
 std::ostream& operator<<(std::ostream& os, const AllowedValues& allowed) {
   for (auto j=0; j<allowed._size; j++)

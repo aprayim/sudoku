@@ -13,7 +13,7 @@ bool Square::unset() {
 
 bool Square::set_value(const uint8_t value) {
 
-  _allowed.disallow_except(value);
+  _allowed.disallow_except({value});
   _value = value;
   return true;
 }

@@ -12,29 +12,11 @@
 
 DEFINE_string(file, "", "file to read sudoku from");
 DEFINE_string(action, "", "proposed action, comma separated values with additional variables");
-DEFINE_bool(allowed_values_test, false, "test allowed values");
 
 int main(int argc, char* argv[]) {
 
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
-
-  if (FLAGS_allowed_values_test) {
-    AllowedValues a;
-    std::cout << a << std::endl;
-    a.disallow_except(5);
-    std::cout << a << std::endl;
-    a.allow(3);
-    std::cout << a << std::endl;
-    a.disallow(5);
-    std::cout << a << std::endl;
-    a.allow(5);
-    std::cout << a << std::endl;
-    a.allow(7);
-    std::cout << a << std::endl;
-    a.allow(1);
-    std::cout << a << std::endl;
-  }
 
   try
   {

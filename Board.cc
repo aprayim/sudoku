@@ -403,23 +403,23 @@ bool Board::hidden_pair_helper(std::shared_ptr<Group> group) {
   }
 
   bool activity = false;
-  for (auto p=0; p<9; p++) {
+  for (uint8_t p=0; p<9; p++) {
     if (first[p]>=9 || second[p]>=9)
       continue;
-    for (auto q=p+1; q<9; q++) {
+    for (uint8_t q=p+1; q<9; q++) {
       if (first[p]!=first[q])
         continue;
       if (second[p]!=second[q])
         continue;
 
       bool cur_activity = false;
-      auto value1=p+1;
-      auto value2=q+1;
+      uint8_t value1=p+1;
+      uint8_t value2=q+1;
       auto sq1 = group->squares()[first[p]];
       auto sq2 = group->squares()[second[p]];
 
-      cur_activity |= sq1->disallow_except(value1, value2);
-      cur_activity |= sq2->disallow_except(value1, value2);
+      cur_activity |= sq1->disallow_except({value1, value2});
+      cur_activity |= sq2->disallow_except({value1, value2});
 
       auto disallow_from_group = [](std::shared_ptr<Group> g, const Square& sq1, const Square& sq2, uint8_t value1, uint8_t value2) {
         bool activity = false;
