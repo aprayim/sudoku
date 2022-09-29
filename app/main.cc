@@ -1,6 +1,5 @@
-#include "Board.h"
-#include "Group.h"
-#include "AllowedValues.h"
+#include "lib/Board.h"
+#include "lib/Group.h"
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>

@@ -15,19 +15,9 @@ cc_library(
     deps = [
             "@com_github_google_glog//:glog",
             ],
-    visibility = [
-            "//src/test:__pkg__",
-            ]
-)
-
-cc_binary(
-    name = "sudoku-solver-test",
-    srcs = [
-            "main.cc",
-            ],
-    deps = [
-            ":sudoku-solver",
-            "@com_github_gflags_gflags//:gflags",
-            ],
+    visibility = ["//visibility:public"]
+#            "//src/test:__pkg__",
+#            "//src/app:__pkg__",
+#           ]
 )
 
