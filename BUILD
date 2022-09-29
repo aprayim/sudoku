@@ -15,6 +15,9 @@ cc_library(
     deps = [
             "@com_github_google_glog//:glog",
             ],
+    visibility = [
+            "//src/test:__pkg__",
+            ]
 )
 
 cc_binary(
@@ -27,3 +30,4 @@ cc_binary(
             "@com_github_gflags_gflags//:gflags",
             ],
 )
+

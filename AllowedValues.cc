@@ -5,6 +5,9 @@
 #include <algorithm>
 
 bool AllowedValues::allow(const uint8_t value) {
+
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
+
   auto j=0;
   while (j<_size) {
     if (_values[j]<value)
@@ -25,6 +28,9 @@ bool AllowedValues::allow(const uint8_t value) {
 }
 
 bool AllowedValues::allowed(const uint8_t value) const {
+
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
+
   for (auto j=0; j<_size; j++) {
     if (_values[j]==value)
       return true;
@@ -33,6 +39,8 @@ bool AllowedValues::allowed(const uint8_t value) const {
 }
 
 bool AllowedValues::disallow(const uint8_t value) {
+
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
 
   auto j=0;
   while (j<_size) {
@@ -55,6 +63,8 @@ bool AllowedValues::disallow(const uint8_t value) {
 }
 
 bool AllowedValues::disallow_except(const uint8_t value) {
+
+  LOG_IF(FATAL, value==0 || value>9) << " bad value: " << value;
 
   if (!allowed(value))
     LOG(FATAL) << "disallow_except: " << value << " not allowed.";
@@ -79,6 +89,9 @@ bool AllowedValues::disallow_except(const uint8_t value) {
 
 
 bool AllowedValues::disallow_except(const uint8_t value1, const uint8_t value2) {
+  
+  LOG_IF(FATAL, value1==0 || value1>9 || value2==0 || value2>9 ) << " bad values: " << value1 << " " << value2;
+
   if (!allowed(value1) || !allowed(value2))
     return false;
 
