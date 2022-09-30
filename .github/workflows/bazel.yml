@@ -1,0 +1,33 @@
+name: Bazel
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, reopened]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Bazel cache
+      id: bazel-cache
+      uses: actions/cache@v2
+      env:
+        version: 4.2.1
+      with:
+        path: | 
+          ~/.cache/bazel
+        key: ${{ runner.os }}-{{ env.version }}-bazel-cache
+
+    - name: Build
+      run: bazel build ...
+
+    - name: Test
+      run: bazel test ...
+      
