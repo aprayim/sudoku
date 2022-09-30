@@ -11,14 +11,17 @@
 #include <stdint.h>
 #include <array>
 #include <filesystem>
+#include <random>
 
 class Board {
 
-//static functions that all the constructors
+//static functions
 public:
   static std::unique_ptr<Board> createFromSimpleFile(const std::filesystem::path& path);
-  static std::unique_ptr<Board> createEmpty() {return nullptr;}
-  static std::unique_ptr<Board> createNewPuzzle() {return nullptr;}
+  static std::unique_ptr<Board> createValidBoard();
+
+private:
+  bool create_valid_board_helper(std::mt19937& g, const uint8_t idx=0);
 
 private: //constructors
   Board();

@@ -11,6 +11,8 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <algorithm>
+#include <random>
 
 std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& path) {
 
@@ -45,6 +47,76 @@ std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& 
 
   return board;
 }
+
+std::unique_ptr<Board> Board::createValidBoard() {
+  
+  auto ptr = new Board;
+  auto board = std::unique_ptr<Board>(ptr);
+
+  std::array<uint8_t, 81> idx_array;
+  idx_array.fill(0);
+  std::iota(std::begin(idx_array), std::end(idx_array), 0);
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+
+  if (!board->create_valid_board_helper(g)) {
+    LOG(ERROR) << "bad board";
+    return nullptr;
+  }
+  return board;
+
+}
+
+bool Board::create_valid_board_helper(std::mt19937& g, const uint8_t idx) {
+
+  //code to display 
+  //std::cout << *this << std::endl;
+  //if (idx>0 && idx!=81)
+  //  std::cout << "\x1b[10A";
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  if (idx==81)
+    return true;
+
+  auto square = _squares[idx];
+  if (square->number_allowed()==0)
+    return false;
+
+
+  AllowedValues av;
+  if (!av.disallow_except({}))
+    LOG(FATAL) << "bad disallow except";
+  for (auto x=0; x<square->number_allowed(); x++) {
+    if (!av.allow(square->allowed_at(x)))
+      LOG(FATAL) << "bad allow";
+  }
+
+  std::shared_ptr<std::vector<std::shared_ptr<Square>>> vs = std::make_shared<std::vector<std::shared_ptr<Square>>>();
+  vs->reserve(81);
+
+  std::vector<uint8_t> vx(av.number_allowed());
+  std::iota(vx.begin(), vx.end(), 0);
+  std::shuffle(vx.begin(), vx.end(), g);
+
+  for (auto x : vx) {
+    auto value = av.at(x);
+    if (!square->set_value(value))
+      LOG(FATAL) << "bad set value";
+    adjust_from_square(square, vs);
+    if (create_valid_board_helper(g, idx+1))
+      return true;
+    if (!square->unset())
+      LOG(FATAL) << "Unable to unset " << *square;
+    for (auto m_square : *vs) 
+      m_square->allow(value);
+    for (auto y=0; y<av.number_allowed(); y++)
+      square->allow(av.at(y));
+    vs->clear();
+  }
+  return false;
+}
+
 
 Board::Board() {
   //squares
@@ -85,15 +157,15 @@ Board::Board() {
 
 bool Board::solve_brute_force(uint8_t sq_idx) {
 
-  if (sq_idx==81) {
-    return true;
-  }
-  
   //code to display brute force solution
   //std::cout << *this << std::endl;
   //std::cout << "\x1b[10A";
   //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
+  if (sq_idx==81) {
+    return true;
+  }
+  
   auto sq = _squares[sq_idx];
 
   if (sq->is_value_set())
