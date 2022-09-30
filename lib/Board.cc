@@ -19,7 +19,6 @@ std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& 
   auto board = std::unique_ptr<Board>(ptr);
 
   std::string line;
-  std::vector<size_t> squares_to_process;
   auto r=0;
   while (getline(ifs, line)) {
 
@@ -35,16 +34,13 @@ std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& 
       uint8_t value = (uint8_t)(x-'0');
       if (value) {
         const auto idx = r*9+c;
-        board->_squares[idx]->set_value(value);
-        squares_to_process.push_back(idx);
+        if (!board->_squares[idx]->set_value(value))
+          LOG(FATAL) << "bad value to set to square " << idx << " value: " << value << " already disallowed";
+        board->adjust_from_square(board->_squares[idx]);
       }
       c++;
     }
     r++;
-  }
-
-  for (auto idx : squares_to_process) {
-    board->adjust_from_square(board->_squares[idx]);
   }
 
   return board;
