@@ -1,4 +1,3 @@
-- upload to repo with some sort of CI and testing on every PR
 - Board class should just be that, we should have functions that do
     1) generate from basic file
     2) generate from scratch

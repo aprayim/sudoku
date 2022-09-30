@@ -12,18 +12,16 @@
 #include <chrono>
 #include <thread>
 
-Board::Board(std::ifstream& is) {
+std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& path) {
 
-  for (auto r=0; r<9; r++) {
-    for (auto c=0; c<9; c++) {
-      _squares[r*9+c] = std::make_shared<Square>(r, c, rc_to_h(r, c));
-    }
-  }
+  std::ifstream ifs(path);
+  auto ptr = new Board;
+  auto board = std::unique_ptr<Board>(ptr);
 
   std::string line;
   std::vector<size_t> squares_to_process;
   auto r=0;
-  while (getline(is, line)) {
+  while (getline(ifs, line)) {
 
     if (r>=9)
       throw std::length_error("too many rows");
@@ -37,7 +35,7 @@ Board::Board(std::ifstream& is) {
       uint8_t value = (uint8_t)(x-'0');
       if (value) {
         const auto idx = r*9+c;
-        _squares[idx]->set_value(value);
+        board->_squares[idx]->set_value(value);
         squares_to_process.push_back(idx);
       }
       c++;
@@ -45,6 +43,20 @@ Board::Board(std::ifstream& is) {
     r++;
   }
 
+  for (auto idx : squares_to_process) {
+    board->adjust_from_square(board->_squares[idx]);
+  }
+
+  return board;
+}
+
+Board::Board() {
+  //squares
+  for (auto r=0; r<9; r++) {
+    for (auto c=0; c<9; c++) {
+      _squares[r*9+c] = std::make_shared<Square>(r, c, rc_to_h(r, c));
+    }
+  }
   //rows
   std::array<std::shared_ptr<Square>, 9> buffer;
   for (auto r=0; r<9; r++) {
@@ -72,11 +84,6 @@ Board::Board(std::ifstream& is) {
       }
       _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE, xr*3+xc);
     }
-  }
-
-
-  for (auto idx : squares_to_process) {
-    adjust_from_square(_squares[idx]);
   }
 }
 

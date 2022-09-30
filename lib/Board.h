@@ -10,15 +10,22 @@
 #include <queue>
 #include <stdint.h>
 #include <array>
+#include <filesystem>
 
 class Board {
 
-public: //constructors
-  Board() = delete;
+//static functions that all the constructors
+public:
+  static std::unique_ptr<Board> createFromSimpleFile(const std::filesystem::path& path);
+  static std::unique_ptr<Board> createEmpty() {return nullptr;}
+  static std::unique_ptr<Board> createNewPuzzle() {return nullptr;}
+
+private: //constructors
+  Board();
   Board(const Board&) = delete;
   Board(Board&&) = delete;
 
-  explicit Board(std::ifstream&);
+public:
   ~Board() {};
 
 public: //solver

@@ -19,17 +19,15 @@ int main(int argc, char* argv[]) {
 
   try
   {
-    std::ifstream file(FLAGS_file);
-
-    Board board(file);
+    auto board = Board::createFromSimpleFile(FLAGS_file);
 
     std::cout << "init board: " << std::endl;
-    std::cout << board << std::endl;
+    std::cout << *board << std::endl;
 
     if (FLAGS_action.empty()) {
-      auto solved = board.solve();
+      auto solved = board->solve();
       std::cout << (solved ? "solved board: " : "unable to solve: ")  << std::endl;
-      std::cout << board << std::endl;
+      std::cout << *board << std::endl;
     }
     else {
       auto split_to_vector = [](const std::string& s, char delim=',') {
@@ -45,14 +43,14 @@ int main(int argc, char* argv[]) {
       auto action = split_to_vector(FLAGS_action);
       bool solved = false;
       if (action[0]=="hidden_pair" || action[0]=="hidden_pair_split")
-        solved = board.solve_hidden_pair(std::stoi(action[1]), Group::string_to_group_type(action[2]));
+        solved = board->solve_hidden_pair(std::stoi(action[1]), Group::string_to_group_type(action[2]));
       else if (action[0]=="naked_triple")
-        solved = board.solve_naked_triple(std::stoi(action[1]), Group::string_to_group_type(action[2]));
+        solved = board->solve_naked_triple(std::stoi(action[1]), Group::string_to_group_type(action[2]));
       else if (action[0]=="xwing")
-        solved = board.solve_xwing();
+        solved = board->solve_xwing();
       else if (action[0]=="brute") {
-        solved = board.solve_brute_force();
-        std::cout << board << std::endl;
+        solved = board->solve_brute_force();
+        std::cout << *board << std::endl;
       }
       else
         LOG(FATAL) << "unknown action: " << action[0];
