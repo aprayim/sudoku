@@ -119,6 +119,28 @@ bool Board::create_valid_board_helper(std::mt19937& g, const uint8_t idx) {
 
 
 Board::Board() {
+  build_internals();
+}
+
+Board::Board(const Board& board) {
+  build_internals();
+  for (auto j=0; j<81; j++) {
+    auto sq = _squares[j];
+    auto b_sq = board._squares[j];
+
+    if (b_sq->is_value_set()) {
+      sq->set_value(b_sq->get_value());
+      continue;
+    }
+
+    sq->disallow_except({});
+    for (auto k=0; k<b_sq->number_allowed(); k++) {
+      sq->allow(b_sq->allowed_at(k));
+    }
+  }
+}
+
+void Board::build_internals() {
   //squares
   for (auto r=0; r<9; r++) {
     for (auto c=0; c<9; c++) {

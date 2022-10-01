@@ -25,8 +25,10 @@ private:
 
 private: //constructors
   Board();
-  Board(const Board&) = delete;
+  Board(const Board&);
   Board(Board&&) = delete;
+
+  void build_internals();
 
 public:
   ~Board() {};
