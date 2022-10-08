@@ -8,8 +8,8 @@ class AllowedValues {
 
 public:
   AllowedValues()=default;
-  AllowedValues(const AllowedValues&)=delete;
-  AllowedValues(AllowedValues&&)=delete;
+  AllowedValues(const AllowedValues&)=default;
+  AllowedValues(AllowedValues&&)=default;
 
   bool allow(const uint8_t value);//return false if value is already allowed
   bool allowed(const uint8_t value) const; // check if value is allowed

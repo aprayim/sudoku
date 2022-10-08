@@ -19,6 +19,7 @@ class Board {
 public:
   static std::unique_ptr<Board> createFromSimpleFile(const std::filesystem::path& path);
   static std::unique_ptr<Board> createValidBoard();
+  static std::unique_ptr<Board> createEmptyBoard();
 
 private:
   bool create_valid_board_helper(std::mt19937& g, const uint8_t idx=0);
@@ -33,8 +34,11 @@ private: //constructors
 public:
   ~Board() {};
 
+public:
+  void find_brute_force_solution(size_t& num_solutions_found, const size_t stop_at, const uint8_t sq_idx=0);
+
 public: //solver
-  bool solve_brute_force(uint8_t sq_idx=0);
+  bool solve_brute_force(uint8_t sq_idx=0);//finds the first solution
   bool solve();
   bool solve_hidden_pair(uint8_t idx, Group::Type type);
   bool solve_naked_triple(uint8_t idx, Group::Type type);

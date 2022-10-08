@@ -2,7 +2,8 @@
     1) generate from basic file - DONE
     2) generate from scratch
         - create valid board (DONE)
-        - backtrack solver should return multiple solutions
+        - backtrack solver should return multiple solutions (DONE)
+        - next up is the algo on stackoverflow - create valid board, then keep removing until you find multiple backtrack solutions
     3) write to file with all allowed values info
     4) reads from that file
 - at the very least make solve a static function but better make a solver interface class and let people use internal protected methods maybe?

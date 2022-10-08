@@ -68,6 +68,11 @@ std::unique_ptr<Board> Board::createValidBoard() {
 
 }
 
+std::unique_ptr<Board> Board::createEmptyBoard() {
+  auto ptr = new Board;
+  return std::unique_ptr<Board>(ptr);
+}
+
 bool Board::create_valid_board_helper(std::mt19937& g, const uint8_t idx) {
 
   //code to display 
@@ -175,6 +180,53 @@ void Board::build_internals() {
       _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE, xr*3+xc);
     }
   }
+}
+
+void Board::find_brute_force_solution(size_t& num_solutions_found, const size_t stop_at, const uint8_t sq_idx) {
+
+  ////code to display brute force solution
+  //std::cout << *this << std::endl;
+  //std::cout << "\x1b[10A";
+  //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+
+  if (sq_idx==81) {
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
+    num_solutions_found++;
+    return;
+  }
+
+  auto sq = _squares[sq_idx];
+
+  if (sq->is_value_set())
+    return find_brute_force_solution(num_solutions_found, stop_at, sq_idx+1);
+
+  if (sq->number_allowed()==0) {
+    return;
+  }
+
+  std::shared_ptr<std::vector<std::shared_ptr<Square>>> vs = std::make_shared<std::vector<std::shared_ptr<Square>>>();
+  vs->reserve(81);
+  AllowedValues allowed = sq->allowed_values();
+  for (auto j=0; j<allowed.number_allowed(); j++) {
+    if (num_solutions_found==stop_at)
+      break;
+    auto value = allowed.at(j);
+    LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    if (!sq->set_value(value))
+      LOG(FATAL) << "Unable to set value on square " << *sq;
+    adjust_from_square(sq, vs);
+    find_brute_force_solution(num_solutions_found, stop_at, sq_idx+1);
+    if (!sq->unset())
+      LOG(FATAL) << "Unable to unset " << *sq;
+    for (auto k=0; k<allowed.number_allowed(); k++)
+      sq->allow(allowed.at(k));
+    for (auto msq : *vs) 
+      msq->allow(value);
+    vs->clear();
+    LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+  }
+  
 }
 
 bool Board::solve_brute_force(uint8_t sq_idx) {

@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 
+DEFINE_bool(brute, false, "find solutions brute force");
 DEFINE_bool(valid, false, "generate valid board");
 DEFINE_string(file, "", "file to read sudoku from");
 DEFINE_string(action, "", "proposed action, comma separated values with additional variables");
@@ -20,6 +21,13 @@ int main(int argc, char* argv[]) {
 
   try
   {
+    if (FLAGS_brute) {
+      auto board = Board::createEmptyBoard();
+      std::cout << *board << std::endl;
+      size_t num_solutions_found = 0;
+      board->find_brute_force_solution(num_solutions_found, 5);
+      std::cout << num_solutions_found << std::endl;
+    }
     if (FLAGS_valid) {
       auto board = Board::createValidBoard();
       if (!board)
