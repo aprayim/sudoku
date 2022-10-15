@@ -30,6 +30,10 @@ TEST(AllowedValue, disallow_except) {
   ASSERT_EQ(a.number_allowed(), 2);
   ASSERT_EQ(a.at(0), 3);
   ASSERT_EQ(a.at(1), 6);
+
+  AllowedValues b;
+  ASSERT_EQ(b.disallow_except({}), true);
+  ASSERT_EQ(b.number_allowed(), 0);
 }
 
 TEST(AllowedValue, allow_order_preservation) {

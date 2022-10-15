@@ -11,19 +11,18 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <algorithm>
+#include <random>
 
-Board::Board(std::ifstream& is) {
+std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& path) {
 
-  for (auto r=0; r<9; r++) {
-    for (auto c=0; c<9; c++) {
-      _squares[r*9+c] = std::make_shared<Square>(r, c, rc_to_h(r, c));
-    }
-  }
+  std::ifstream ifs(path);
+  auto ptr = new Board;
+  auto board = std::unique_ptr<Board>(ptr);
 
   std::string line;
-  std::vector<size_t> squares_to_process;
   auto r=0;
-  while (getline(is, line)) {
+  while (getline(ifs, line)) {
 
     if (r>=9)
       throw std::length_error("too many rows");
@@ -37,14 +36,166 @@ Board::Board(std::ifstream& is) {
       uint8_t value = (uint8_t)(x-'0');
       if (value) {
         const auto idx = r*9+c;
-        _squares[idx]->set_value(value);
-        squares_to_process.push_back(idx);
+        if (!board->_squares[idx]->set_value(value))
+          LOG(FATAL) << "bad value to set to square " << idx << " value: " << value << " already disallowed";
+        board->adjust_from_square(board->_squares[idx]);
       }
       c++;
     }
     r++;
   }
 
+  return board;
+}
+
+std::unique_ptr<Board> Board::createPuzzle() {
+
+  auto validBoard = Board::createValidBoard();
+  auto squares = validBoard->_squares;
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(squares.begin(), squares.end(), g);
+
+  for (auto sq : squares) {
+    //code to display 
+    std::cout << *validBoard << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::cout << "\x1b[10A";
+    
+    auto value = sq->value();
+    sq->unset();
+
+    for (auto bsq : validBoard->_squares) {
+      if (bsq->is_value_set())
+        continue;
+      for (auto j=1; j<=9; j++)
+        bsq->allow(j);
+    }
+    for (auto bsq : validBoard->_squares) {
+      if (!bsq->is_value_set())
+        continue;
+      validBoard->adjust_from_square(bsq);
+    }
+
+    Board test_board = *validBoard;
+    size_t num_solutions_found = 0;
+    test_board.find_brute_force_solution(num_solutions_found, 2);
+    LOG_IF(FATAL, num_solutions_found==0) << "zero solutions in createPuzzle";
+    if (num_solutions_found==1)
+      continue;
+    else {
+      sq->set_value(value);
+      validBoard->adjust_from_square(sq);
+    }
+  }
+  return validBoard;
+}
+
+std::unique_ptr<Board> Board::createValidBoard() {
+  
+  auto ptr = new Board;
+  auto board = std::unique_ptr<Board>(ptr);
+
+  std::array<uint8_t, 81> idx_array;
+  idx_array.fill(0);
+  std::iota(std::begin(idx_array), std::end(idx_array), 0);
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+
+  if (!board->create_valid_board_helper(g)) {
+    LOG(ERROR) << "bad board";
+    return nullptr;
+  }
+  return board;
+
+}
+
+std::unique_ptr<Board> Board::createEmptyBoard() {
+  auto ptr = new Board;
+  return std::unique_ptr<Board>(ptr);
+}
+
+bool Board::create_valid_board_helper(std::mt19937& g, const uint8_t idx) {
+
+  //code to display 
+  //std::cout << *this << std::endl;
+  //if (idx>0 && idx!=81)
+  //  std::cout << "\x1b[10A";
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+  if (idx==81)
+    return true;
+
+  auto square = _squares[idx];
+  if (square->number_allowed()==0)
+    return false;
+
+
+  AllowedValues av;
+  if (!av.disallow_except({}))
+    LOG(FATAL) << "bad disallow except";
+  for (auto x=0; x<square->number_allowed(); x++) {
+    if (!av.allow(square->allowed_at(x)))
+      LOG(FATAL) << "bad allow";
+  }
+
+  std::shared_ptr<std::vector<std::shared_ptr<Square>>> vs = std::make_shared<std::vector<std::shared_ptr<Square>>>();
+  vs->reserve(81);
+
+  std::vector<uint8_t> vx(av.number_allowed());
+  std::iota(vx.begin(), vx.end(), 0);
+  std::shuffle(vx.begin(), vx.end(), g);
+
+  for (auto x : vx) {
+    auto value = av.at(x);
+    if (!square->set_value(value))
+      LOG(FATAL) << "bad set value";
+    adjust_from_square(square, vs);
+    if (create_valid_board_helper(g, idx+1))
+      return true;
+    if (!square->unset())
+      LOG(FATAL) << "Unable to unset " << *square;
+    for (auto m_square : *vs) 
+      m_square->allow(value);
+    for (auto y=0; y<av.number_allowed(); y++)
+      square->allow(av.at(y));
+    vs->clear();
+  }
+  return false;
+}
+
+
+Board::Board() {
+  build_internals();
+}
+
+Board::Board(const Board& board) {
+  build_internals();
+  for (auto j=0; j<81; j++) {
+    auto sq = _squares[j];
+    auto b_sq = board._squares[j];
+
+    if (b_sq->is_value_set()) {
+      sq->set_value(b_sq->value());
+      continue;
+    }
+
+    sq->disallow_except({});
+    for (auto k=0; k<b_sq->number_allowed(); k++) {
+      sq->allow(b_sq->allowed_at(k));
+    }
+  }
+}
+
+void Board::build_internals() {
+  //squares
+  for (auto r=0; r<9; r++) {
+    for (auto c=0; c<9; c++) {
+      _squares[r*9+c] = std::make_shared<Square>(r, c, rc_to_h(r, c));
+    }
+  }
   //rows
   std::array<std::shared_ptr<Square>, 9> buffer;
   for (auto r=0; r<9; r++) {
@@ -73,24 +224,66 @@ Board::Board(std::ifstream& is) {
       _houses[xr*3+xc] = std::make_shared<Group>(buffer, Group::Type::HOUSE, xr*3+xc);
     }
   }
+}
+
+void Board::find_brute_force_solution(size_t& num_solutions_found, const size_t stop_at, const uint8_t sq_idx) {
+
+  //code to display brute force solution
+  //std::cout << *this << std::endl;
+  //std::cout << "\x1b[10A";
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 
-  for (auto idx : squares_to_process) {
-    adjust_from_square(_squares[idx]);
+  if (sq_idx==81) {
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
+    num_solutions_found++;
+    return;
   }
+
+  auto sq = _squares[sq_idx];
+
+  if (sq->is_value_set())
+    return find_brute_force_solution(num_solutions_found, stop_at, sq_idx+1);
+
+  if (sq->number_allowed()==0) {
+    return;
+  }
+
+  std::shared_ptr<std::vector<std::shared_ptr<Square>>> vs = std::make_shared<std::vector<std::shared_ptr<Square>>>();
+  vs->reserve(81);
+  AllowedValues allowed = sq->allowed_values();
+  for (auto j=0; j<allowed.number_allowed(); j++) {
+    if (num_solutions_found==stop_at)
+      break;
+    auto value = allowed.at(j);
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    if (!sq->set_value(value))
+      LOG(FATAL) << "Unable to set value on square " << *sq;
+    adjust_from_square(sq, vs);
+    find_brute_force_solution(num_solutions_found, stop_at, sq_idx+1);
+    if (!sq->unset())
+      LOG(FATAL) << "Unable to unset " << *sq;
+    for (auto k=0; k<allowed.number_allowed(); k++)
+      sq->allow(allowed.at(k));
+    for (auto msq : *vs) 
+      msq->allow(value);
+    vs->clear();
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+  }
+  
 }
 
 bool Board::solve_brute_force(uint8_t sq_idx) {
 
-  if (sq_idx==81) {
-    return true;
-  }
-  
   //code to display brute force solution
   //std::cout << *this << std::endl;
   //std::cout << "\x1b[10A";
   //std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
+  if (sq_idx==81) {
+    return true;
+  }
+  
   auto sq = _squares[sq_idx];
 
   if (sq->is_value_set())
@@ -107,7 +300,7 @@ bool Board::solve_brute_force(uint8_t sq_idx) {
     allowed_values.push_back(sq->allowed_at(j));
 
   for (auto value : allowed_values) {
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
     if (!sq->set_value(value))
       LOG(FATAL) << "Unable to set value on square " << *sq;
     adjust_from_square(sq, vs);
@@ -120,7 +313,7 @@ bool Board::solve_brute_force(uint8_t sq_idx) {
     for (auto msq : *vs) 
       msq->allow(value);
     vs->clear();
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
   }
   return false;
 }
@@ -611,14 +804,9 @@ bool Board::process_all_groups(bool (Board::*helper)(std::shared_ptr<Group>)) {
 std::ostream& operator<<(std::ostream& os, const Board& board)
 {
   for (auto r=0; r<9; r++) {
-    auto delim="";
     for (auto c=0; c<9; c++) {
       const unsigned val = board._squares[r*9+c]->value();
-      if (val)
-        os << delim << val;
-      else
-        os << delim << "_";
-      delim=",";
+      os << val;
     }
     os << std::endl;
   }

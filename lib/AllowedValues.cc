@@ -63,7 +63,7 @@ bool AllowedValues::disallow(const uint8_t value) {
 }
 
 bool AllowedValues::disallow_except(std::initializer_list<uint8_t> values) {
-  
+
   for (auto value : values)
     LOG_IF(FATAL, value==0 || value>9) << " bad value: " << (unsigned)value;
 

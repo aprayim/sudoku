@@ -19,6 +19,7 @@ public:
   uint8_t c() const {return _c;}
   uint8_t h() const {return _h;}
   uint8_t value() const {return _value;}
+  AllowedValues allowed_values() const {return _allowed;}
 
 //interface to allowed values
   bool allow(const uint8_t value) {return _allowed.allow(value);}
