@@ -3,6 +3,7 @@
     2) generate from scratch
         - create valid board (DONE)
         - backtrack solver should return multiple solutions (DONE)
+        - disallow_except for {} input is wrong, also square->get_value shouldn't be a thing, basically go through from the bottom to determine what's what
         - next up is the algo on stackoverflow - create valid board, then keep removing until you find multiple backtrack solutions
     3) write to file with all allowed values info
     4) reads from that file
