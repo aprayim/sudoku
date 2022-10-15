@@ -11,6 +11,7 @@
 
 DEFINE_bool(brute, false, "find solutions brute force");
 DEFINE_bool(valid, false, "generate valid board");
+DEFINE_bool(puzzle, false, "generate puzzle");
 DEFINE_string(file, "", "file to read sudoku from");
 DEFINE_string(action, "", "proposed action, comma separated values with additional variables");
 
@@ -21,6 +22,16 @@ int main(int argc, char* argv[]) {
 
   try
   {
+    if (FLAGS_puzzle) {
+      auto board = Board::createPuzzle();
+      std::cout << *board << std::endl;
+      if (!board->solve()) {
+        LOG(INFO) << "Unable to solve.";
+      }
+      else {
+        std::cout << "solved\n" << *board << std::endl;
+      }
+    }
     if (FLAGS_brute) {
       auto board = Board::createEmptyBoard();
       std::cout << *board << std::endl;
@@ -45,8 +56,13 @@ int main(int argc, char* argv[]) {
 
       if (FLAGS_action.empty()) {
         auto solved = board->solve();
-        std::cout << (solved ? "solved board: " : "unable to solve: ")  << std::endl;
-        std::cout << *board << std::endl;
+        if (!solved) {
+          size_t num_solutions_found=0;
+          std::cout << "unable to solve, trying brute force";
+          board = Board::createFromSimpleFile(FLAGS_file);
+          board->find_brute_force_solution(num_solutions_found, 1);
+          std::cout << "solution:\n" << *board << std::endl;
+        }
       }
       else {
         auto split_to_vector = [](const std::string& s, char delim=',') {

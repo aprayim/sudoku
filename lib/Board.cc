@@ -48,6 +48,50 @@ std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& 
   return board;
 }
 
+std::unique_ptr<Board> Board::createPuzzle() {
+
+  auto validBoard = Board::createValidBoard();
+  auto squares = validBoard->_squares;
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(squares.begin(), squares.end(), g);
+
+  for (auto sq : squares) {
+    //code to display 
+    std::cout << *validBoard << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::cout << "\x1b[10A";
+    
+    auto value = sq->value();
+    sq->unset();
+
+    for (auto bsq : validBoard->_squares) {
+      if (bsq->is_value_set())
+        continue;
+      for (auto j=1; j<=9; j++)
+        bsq->allow(j);
+    }
+    for (auto bsq : validBoard->_squares) {
+      if (!bsq->is_value_set())
+        continue;
+      validBoard->adjust_from_square(bsq);
+    }
+
+    Board test_board = *validBoard;
+    size_t num_solutions_found = 0;
+    test_board.find_brute_force_solution(num_solutions_found, 2);
+    LOG_IF(FATAL, num_solutions_found==0) << "zero solutions in createPuzzle";
+    if (num_solutions_found==1)
+      continue;
+    else {
+      sq->set_value(value);
+      validBoard->adjust_from_square(sq);
+    }
+  }
+  return validBoard;
+}
+
 std::unique_ptr<Board> Board::createValidBoard() {
   
   auto ptr = new Board;
@@ -134,7 +178,7 @@ Board::Board(const Board& board) {
     auto b_sq = board._squares[j];
 
     if (b_sq->is_value_set()) {
-      sq->set_value(b_sq->get_value());
+      sq->set_value(b_sq->value());
       continue;
     }
 
@@ -184,10 +228,10 @@ void Board::build_internals() {
 
 void Board::find_brute_force_solution(size_t& num_solutions_found, const size_t stop_at, const uint8_t sq_idx) {
 
-  ////code to display brute force solution
+  //code to display brute force solution
   //std::cout << *this << std::endl;
   //std::cout << "\x1b[10A";
-  //std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 
   if (sq_idx==81) {
@@ -212,7 +256,7 @@ void Board::find_brute_force_solution(size_t& num_solutions_found, const size_t 
     if (num_solutions_found==stop_at)
       break;
     auto value = allowed.at(j);
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
     if (!sq->set_value(value))
       LOG(FATAL) << "Unable to set value on square " << *sq;
     adjust_from_square(sq, vs);
@@ -224,7 +268,7 @@ void Board::find_brute_force_solution(size_t& num_solutions_found, const size_t 
     for (auto msq : *vs) 
       msq->allow(value);
     vs->clear();
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
   }
   
 }
@@ -256,7 +300,7 @@ bool Board::solve_brute_force(uint8_t sq_idx) {
     allowed_values.push_back(sq->allowed_at(j));
 
   for (auto value : allowed_values) {
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " setting value: " << (unsigned)value;
     if (!sq->set_value(value))
       LOG(FATAL) << "Unable to set value on square " << *sq;
     adjust_from_square(sq, vs);
@@ -269,7 +313,7 @@ bool Board::solve_brute_force(uint8_t sq_idx) {
     for (auto msq : *vs) 
       msq->allow(value);
     vs->clear();
-    LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
+    //LOG(INFO) << "Square: " << (unsigned)sq_idx << " UNsetting value: " << (unsigned)value;
   }
   return false;
 }
@@ -760,14 +804,9 @@ bool Board::process_all_groups(bool (Board::*helper)(std::shared_ptr<Group>)) {
 std::ostream& operator<<(std::ostream& os, const Board& board)
 {
   for (auto r=0; r<9; r++) {
-    auto delim="";
     for (auto c=0; c<9; c++) {
       const unsigned val = board._squares[r*9+c]->value();
-      if (val)
-        os << delim << val;
-      else
-        os << delim << "_";
-      delim=",";
+      os << val;
     }
     os << std::endl;
   }

@@ -33,7 +33,6 @@ public:
   bool same_allowed(const Square& sq);
 
 //others
-  bool get_value() const { return _value;}
   bool is_value_set() const { return _value!=0;}
   bool set_value(const uint8_t value); //check if it can disallow except, then set value
   bool unset();
