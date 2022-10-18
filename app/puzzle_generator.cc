@@ -34,5 +34,5 @@ int main(int argc, char* argv[]) {
     LOG(FATAL) << "caught exception: " << e.what();
     return -1;
   }
-  return 1;
+  return 0;
 } 

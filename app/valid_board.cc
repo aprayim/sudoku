@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     if (FLAGS_output_file.empty())
       std::cout << *board << std::endl;
     else {
-      std::ofstream ofs(FLAGS_output_file);
+      std::ofstream ofs(FLAGS_output_file+".sudoku");
       ofs << *board;
     }
     return 0;
