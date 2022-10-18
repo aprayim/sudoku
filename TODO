@@ -1,12 +1,10 @@
-- Board class should just be that, we should have functions that do
-    1) generate from basic file - DONE
-    2) generate from scratch
-        - create valid board (DONE)
-        - backtrack solver should return multiple solutions (DONE)
-        - disallow_except for {} input is wrong, also square->get_value shouldn't be a thing, basically go through from the bottom to determine what's what (DONE)
-        - next up is the algo on stackoverflow - create valid board, then keep removing until you find multiple backtrack solutions (DONE)
-    3) write to basic file with all allowed values info (DONE)
+- Develop small apps, 
+    1) create valid board,
+    2) create X number of Sudokus from this valid board,
+    3) Solve with returning an array of techniques used,
+    4) Solve Brute Force
 - create a docker file with bazel, gcc12 and any other dependency with a non-root user and build SUDOKU app in a container
+- build the app with cmake
 - modify github actions to use the image to spin up a container and build and test there
 
 - at the very least make solve a static function but better make a solver interface class and let people use internal protected methods maybe?

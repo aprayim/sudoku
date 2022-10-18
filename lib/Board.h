@@ -20,6 +20,7 @@ public:
   static std::unique_ptr<Board> createFromSimpleFile(const std::filesystem::path& path);
   static std::unique_ptr<Board> createValidBoard();
   static std::unique_ptr<Board> createEmptyBoard();
+  static std::unique_ptr<Board> createPuzzleFromValidBoard(const Board& valid_board, std::mt19937& g);
   static std::unique_ptr<Board> createPuzzle();
 
 private:

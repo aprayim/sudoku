@@ -48,37 +48,39 @@ std::unique_ptr<Board> Board::createFromSimpleFile(const std::filesystem::path& 
   return board;
 }
 
-std::unique_ptr<Board> Board::createPuzzle() {
+std::unique_ptr<Board> Board::createPuzzleFromValidBoard(const Board& valid_board, std::mt19937& g) {
 
-  auto validBoard = Board::createValidBoard();
-  auto squares = validBoard->_squares;
+  auto board = std::unique_ptr<Board>(new Board(valid_board));
+  
+  std::vector<size_t> indices(81, 0);
+  std::iota(indices.begin(), indices.end(), 0);
+  std::shuffle(indices.begin(), indices.end(), g);
 
-  std::random_device rd;
-  std::mt19937 g(rd());
-  std::shuffle(squares.begin(), squares.end(), g);
-
-  for (auto sq : squares) {
+  for (auto idx : indices) {
     //code to display 
-    std::cout << *validBoard << std::endl;
+    std::cout << *board << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::cout << "\x1b[10A";
+
+    auto sq = board->_squares[idx];
     
     auto value = sq->value();
     sq->unset();
 
-    for (auto bsq : validBoard->_squares) {
+    //there's definitely a quicker way to do this but I don't care at the moment
+    for (auto bsq : board->_squares) {
       if (bsq->is_value_set())
         continue;
       for (auto j=1; j<=9; j++)
         bsq->allow(j);
     }
-    for (auto bsq : validBoard->_squares) {
+    for (auto bsq : board->_squares) {
       if (!bsq->is_value_set())
         continue;
-      validBoard->adjust_from_square(bsq);
+      board->adjust_from_square(bsq);
     }
 
-    Board test_board = *validBoard;
+    Board test_board = *board;
     size_t num_solutions_found = 0;
     test_board.find_brute_force_solution(num_solutions_found, 2);
     LOG_IF(FATAL, num_solutions_found==0) << "zero solutions in createPuzzle";
@@ -86,10 +88,20 @@ std::unique_ptr<Board> Board::createPuzzle() {
       continue;
     else {
       sq->set_value(value);
-      validBoard->adjust_from_square(sq);
+      board->adjust_from_square(sq);
     }
   }
-  return validBoard;
+  return board;
+}
+
+std::unique_ptr<Board> Board::createPuzzle() {
+
+  auto valid_board = Board::createValidBoard();
+  std::random_device rd;
+  std::mt19937 g(rd());
+
+  return createPuzzleFromValidBoard(*valid_board, g);
+
 }
 
 std::unique_ptr<Board> Board::createValidBoard() {
