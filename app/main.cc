@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
           board = Board::createFromSimpleFile(FLAGS_file);
           board->find_brute_force_solution(num_solutions_found, 1);
           std::cout << "solution:\n" << *board << std::endl;
+        } else {
+          std::cout << "solved!\n" << *board << std::endl;
         }
       }
       else {
