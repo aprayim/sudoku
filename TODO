@@ -1,12 +1,15 @@
-- Develop small apps, 
-    1) create valid board,
-    2) create X number of Sudokus from this valid board,
-    3) Solve with returning an array of techniques used,
-    4) Solve Brute Force
-- create a docker file with bazel, gcc12 and any other dependency with a non-root user and build SUDOKU app in a container
-- build the app with cmake
-- modify github actions to use the image to spin up a container and build and test there
+- import gtest stuff to cmake and remove any bazel dependency
+- figure out how to use ninja with cmake instead of make
+- get this to build and run in a docker container with ninja and gcc, poetry and the whole thing
+- create a postgres db with tables etc - that you'll need to learn
+    tables would be:
+        - valid board table (id, valid board file etc..)
+        - puzzle table (id, board file, valid board id)
+        - techniques (puzzle id, technique) - you'll need to create an app that gives you techniques necessary to solve puzzle if the puzzle is solvable
+- put this postgres db in a container as well, then run both containers simultaneously
+- finally run all of this in google cloud although not sure how all this will work
 
-- at the very least make solve a static function but better make a solver interface class and let people use internal protected methods maybe?
-- consolidate naked stuff into a template paradigm if you can
-- consolidate hidden stuff into a template paradigm if you can
+improvements
+- keep updating new techniques
+- consolidate naked stuff into a template paradigm if feasible
+- consolidate hidden stuff into a template paradigm if feasible
