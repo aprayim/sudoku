@@ -6,28 +6,20 @@ on:
   pull_request:
     branches: [ "main" ]
     types: [opened, reopened]
-
 jobs:
   build:
-    runs-on: macos-latest
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      
-    - name: Bazel cache
-      id: bazel-cache
-      uses: actions/cache@v2
-      env:
-        version: 4.2.1
+    - uses: actions/checkout@v2
       with:
-        path: | 
-          ~/.cache/bazel
-        key: ${{ runner.os }}-{{ env.version }}-bazel-cache
-
-    - name: Build
-      run: bazel build ...
-
-    - name: Test
-      run: bazel test ...
-      
+        submodules: recursive
+    # build project
+    - name: mkdir
+      run: mkdir build
+    - name: cmake build
+      run: cmake -S . -B build
+    - name: cmake make
+      run: cmake --build build
+    # run tests
+    - name: run test
+      run: cd build && ctest .
