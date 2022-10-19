@@ -9,6 +9,17 @@ add_subdirectory(gflags)
 add_subdirectory(glog)
 include_directories (${gflags_INCLUDE_DIR})
 include_directories (${glog_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(lib)
 add_subdirectory(app)
+add_subdirectory(test)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.12.1
+)
+FetchContent_MakeAvailable(googletest)
+enable_testing()
