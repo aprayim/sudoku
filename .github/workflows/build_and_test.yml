@@ -17,7 +17,7 @@ jobs:
     - name: mkdir
       run: mkdir build
     - name: cmake build
-      run: cmake -S . -B build
+      run: cmake -S . -B build -GNinja
     - name: cmake make
       run: cmake --build build
     # run tests
