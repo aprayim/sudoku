@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <array>
 #include <string>
+#include <memory>
 
 class Group {
 
